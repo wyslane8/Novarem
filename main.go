@@ -26,6 +26,9 @@ func main() {
 
 	//si la utilisateur n'existe pas dans novarem.db elle crée automatiquement une table correspondante
 	db.AutoMigrate(&Utilisateur{})
+	db.AutoMigrate(&CategoriePrestation{})
+	db.AutoMigrate(&Prestation{})
+	db.AutoMigrate(&Evenement{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -38,6 +41,22 @@ func main() {
 	r.PUT("/utilisateurs/:id", modifierUtilisateur)
 	r.DELETE("/utilisateurs/:id", authAdmin(), supprimerUtilisateur)
 	r.POST("/login", login)
+
+	r.GET("/categoriePresta", getCategories)
+	r.POST("/categoriePresta", creerCategorie)
+	r.PUT("/categoriePresta/:id", modifierCategorie)
+	r.DELETE("/categoriePresta/:id", authAdmin(), supprimerCategorie)
+
+	r.GET("/prestations", getPrestation)
+	r.POST("/prestations", creerPrestation)
+	r.PUT("/prestations/:id", modifierPrestation)
+	r.DELETE("/prestations/:id", authAdmin(), supprimerPrestation)
+
+	r.GET("/evenements", getEvenement)
+	r.POST("/evenements", creerEvenement)
+	r.PUT("/evenements/:id", modifierEvenement)
+	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
+
 	r.Run(":8080")
 }
 
@@ -144,7 +163,6 @@ func login(c *gin.Context) {
 	//signe le token avec la clé secrete poru que personne ne puisse le modif/supp
 	tokenSigne, err := token.SignedString(cleSecrete)
 	if err != nil {
-		fmt.Println("ERREUR JWR:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors de la génération du token"})
 		return
 	}
@@ -184,4 +202,133 @@ func authAdmin() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func getCategories(c *gin.Context) {
+	var categoriePresta []CategoriePrestation
+	db.Find(&categoriePresta)
+	c.JSON(http.StatusOK, categoriePresta)
+}
+
+func creerCategorie(c *gin.Context) {
+	var nouvel CategoriePrestation
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}
+
+func modifierCategorie(c *gin.Context) {
+	id := c.Param("id")
+	var categoriePresta CategoriePrestation
+	if err := db.First(&categoriePresta, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "catégories introuvables"})
+		return
+	}
+	if err := c.ShouldBindJSON(&categoriePresta); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+	db.Save(&categoriePresta)
+	c.JSON(http.StatusOK, categoriePresta)
+}
+
+func supprimerCategorie(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&CategoriePrestation{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "catégorie supprimée"})
+}
+
+func getPrestation(c *gin.Context) {
+	var prestation []Prestation
+	db.Find(&prestation)
+	c.JSON(http.StatusOK, prestation)
+}
+
+func creerPrestation(c *gin.Context) {
+	var nouvel Prestation
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}
+
+func modifierPrestation(c *gin.Context) {
+	id := c.Param("id")
+	var prestation Prestation
+	if err := db.First(&prestation, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "prestations introuvables"})
+		return
+	}
+	if err := c.ShouldBindJSON(&prestation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+	db.Save(&prestation)
+	c.JSON(http.StatusOK, prestation)
+}
+
+func supprimerPrestation(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&Prestation{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "prestation supprimée"})
+}
+
+func getEvenement(c *gin.Context) {
+	var evenement []Evenement
+	db.Find(&evenement)
+	c.JSON(http.StatusOK, evenement)
+}
+
+func creerEvenement(c *gin.Context) {
+	var nouvel Evenement
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}
+
+func modifierEvenement(c *gin.Context) {
+	id := c.Param("id")
+	var evenement Evenement
+	if err := db.First(&evenement, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "évènements introuvables"})
+		return
+	}
+	if err := c.ShouldBindJSON(&evenement); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+	db.Save(&evenement)
+	c.JSON(http.StatusOK, evenement)
+}
+
+func supprimerEvenement(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&Evenement{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "évènements supprimée"})
 }

@@ -12,3 +12,27 @@ type Utilisateur struct {
 	MotDePasse string `json:"mot_de_passe"`
 	Role       string `json:"role"`
 }
+
+type CategoriePrestation struct {
+	gorm.Model
+	Nom         string `json:"nom"`
+	Description string `json:"description"`
+}
+
+type Prestation struct {
+	gorm.Model
+	Nom         string  `json:"nom"`
+	Description string  `json:"description"`
+	TypeOffre   string  `json:"Type_offre"`
+	Tarif       float64 `json:"tarif"`
+	CapaciteMax int     `json:"Capacite_max"`
+}
+
+type Evenement struct {
+	gorm.Model
+	Titre          string `json:"titre"`
+	Description    string `json:"description"`
+	DateHeureDebut string `json:"date_heure_debut"`
+	DureeMinutes   int    `json:"duree_minutes"`
+	CapaciteMax    int    `json:"capacite_max"`
+}
