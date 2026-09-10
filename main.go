@@ -35,26 +35,30 @@ func main() {
 	//créer le serveur Gin
 	r := gin.Default()
 
+	//dis a gin tous les fichiers du dossier courant ./ sont accessible via static donc ça permet a index de charger app via script . L'autre c'est lorsque quon va a la racine du site / on tombe sur index.html
+	r.Static("/static", "./")
+	r.StaticFile("/", "./index.html")
+
 	//quand qn appelles /utilisateurs on execute la fonction getUtilisateurs qui recupere tous les user de la base (db.find) et les renvoie avce un code 200 (http.StatusOK)
 	r.GET("/utilisateurs", getUtilisateurs)
 	r.POST("/utilisateurs", creerUtilisateur)
-	r.PUT("/utilisateurs/:id", modifierUtilisateur)
+	r.PUT("/utilisateurs/:id", authAdmin(), modifierUtilisateur)
 	r.DELETE("/utilisateurs/:id", authAdmin(), supprimerUtilisateur)
 	r.POST("/login", login)
 
 	r.GET("/categoriePresta", getCategories)
 	r.POST("/categoriePresta", creerCategorie)
-	r.PUT("/categoriePresta/:id", modifierCategorie)
+	r.PUT("/categoriePresta/:id", authAdmin(), modifierCategorie)
 	r.DELETE("/categoriePresta/:id", authAdmin(), supprimerCategorie)
 
 	r.GET("/prestations", getPrestation)
 	r.POST("/prestations", creerPrestation)
-	r.PUT("/prestations/:id", modifierPrestation)
+	r.PUT("/prestations/:id", authAdmin(),modifierPrestation)
 	r.DELETE("/prestations/:id", authAdmin(), supprimerPrestation)
 
 	r.GET("/evenements", getEvenement)
 	r.POST("/evenements", creerEvenement)
-	r.PUT("/evenements/:id", modifierEvenement)
+	r.PUT("/evenements/:id", authAdmin(),modifierEvenement)
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
 
 	r.Run(":8080")
@@ -106,9 +110,22 @@ func modifierUtilisateur(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"erreur": "utilisateur introuvable"})
 		return
 	}
+	ancienMotDePAsse := utilisateur.MotDePasse
+
 	if err := c.ShouldBindJSON(&utilisateur); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrectes"})
 		return
+	}
+
+	if utilisateur.MotDePasse == "" {
+		utilisateur.MotDePasse = ancienMotDePAsse
+	} else {
+		hash, err := bcrypt.GenerateFromPassword([]byte(utilisateur.MotDePasse), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
+			return
+		}
+		utilisateur.MotDePasse = string(hash)
 	}
 
 	//ici on chareg d'abord l'utilisateur existsnat et apres on applique les nouvelles donned grace shouldbindjson

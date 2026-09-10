@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UpcycleConnect - ADMIN</title>
+    <!-- Importation de Bootstrap via un serveur pas besoin d'installation -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="mb-4 border p-3">
+        <h2>Connexion</h2>
+        <form id="form-login">
+            <div class="mb-2">
+                <input type="email" id="login-email" placeholder="Email" class="form-control" required>
+            </div>
+            <div class="mb-2">
+                <input type="password" id="login-mdp" placeholder="Mot de passe" class="form-control"  required>
+            </div>
+            <button type="submit" class="btn btn-secondary">Se connecter</button>
+        </form>
+        <p id="login-statut" class="mt-2"></p>
+    </div>
+    <!-- MT = margin top -->
+    <div class="container mt-4">
+        <h1>Admnistration UpcycleConnect</h1>
+        <h2>Utilisateurs</h2>
+        <!-- 2 classes appliquées en meme temps table donne le style de base et stripped rajoute une alternance de couleur entre les lignes -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-utilisateurs"></tbody>
+        </table>
+    </div>
+    <h2 class="mt-4">Ajouter un utilisateur</h2>
+    <form id="form-user">
+        <!--margin bottom -->
+        <div class="mb-2">
+            <!-- placeholder texte gris qui s'affcihe dans le champs vide != de label-->
+            <input type="text" id="input-nom" placeholder="Nom" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="email" id="input-email" placeholder="Email" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="password" id="input-mdp" placeholder="Mot de passe" class="form-control" >
+        </div>
+        <div class="mb-2">
+            <select id="input-role" class="form-control">
+                <option value="particulier">Particulier</option>
+                <option value="professionnel">Professionnel</option>
+                <option value="salarie">Salarié</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <!-- btn donne le style de base du bouton et btn primary donne la couleur (bleu ici)-->
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+    <div class="container mt-4">
+        <h2>Catégorie de prestation</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-categories"></tbody>
+        </table>
+    </div>
+    <h2 class="mt-4">Ajouter une catégorie</h2>
+    <form id="form-categorie">
+        <div class="mb-2">
+            <input type="text" id="cat-nom" placeholder="Nom" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="cat-description" placeholder="Description" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn primary">Créer</button>
+    </form>
+
+
+
+    <div class="container mt-4">
+        <h2>Prestation</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Type d'Offre</th>
+                    <th>Tarif</th>
+                    <th>Capacité Maximum</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-prestation"></tbody>
+        </table>
+    </div>
+
+    <h2 class="mt-4">Ajouter une prestation</h2>
+    <form id="form-prestation">
+        <div class="mb-2">
+            <input type="text" id="presta-nom" placeholder="Nom" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="presta-description" placeholder="Description" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="presta-TypeOffre" placeholder="Type d'Offre" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="number" id="presta-Tarif" placeholder="Tarif" class="form-control" required step="0.01">
+        </div>
+        <div class="mb-2">
+            <input type="number" id="presta-CapaciteMax" placeholder="Capacité Maximum" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+
+
+
+
+
+    <div class="container mt-4">
+        <h2>Evènements</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Date</th>
+                    <th>Durée</th>
+                    <th>Capacité Maximum</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-evenements"></tbody>
+        </table>
+    </div>
+
+    <h2 class="mt-4">Ajouter un évènements</h2>
+    <form id="form-evenement">
+        <div class="mb-2">
+            <input type="text" id="events_titre" placeholder="titre" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="events_description" placeholder="description" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="events_date" placeholder="date_heure_debut" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="number" id="events_duree" placeholder="duree_minutes" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="number" id="events_capacite_max" placeholder="capacité Maximum" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

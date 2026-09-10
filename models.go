@@ -23,9 +23,9 @@ type Prestation struct {
 	gorm.Model
 	Nom         string  `json:"nom"`
 	Description string  `json:"description"`
-	TypeOffre   string  `json:"Type_offre"`
+	TypeOffre   string  `json:"type_offre"`
 	Tarif       float64 `json:"tarif"`
-	CapaciteMax int     `json:"Capacite_max"`
+	CapaciteMax int     `json:"capacite_max"`
 }
 
 type Evenement struct {
