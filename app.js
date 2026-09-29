@@ -1,7 +1,7 @@
 //fonction qui attend une reponse du serveur avant de continuer 
 async function chargerUtilisateurs() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("http://localhost:8080/utilisateurs");
+    const reponse = await fetch("/utilisateurs");
     //transforme la reponse en objet js
     const utilisateurs = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -38,14 +38,14 @@ document.getElementById("form-user").addEventListener("submit", async function (
     };
 
     if (idEnModification === null) {
-        await fetch("http://localhost:8080/utilisateurs", {
+        await fetch("/utilisateurs", {
             method: "POST",
-            headers: { "Content type": "application/json" },
+            headers: { "Content-type": "application/json" },
             body: JSON.stringify(nouvelUser)
         });
     } else {
         const token = localStorage.getItem("token");
-        await fetch(`http://localhost:8080/utilisateurs/${idEnModification}`, {
+        await fetch(`/utilisateurs/${idEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -61,7 +61,7 @@ document.getElementById("form-user").addEventListener("submit", async function (
 
 async function supprimerUtilisateur(id) {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:8080/utilisateurs/${id}`, {
+    await fetch(`/utilisateurs/${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
     });
@@ -75,7 +75,7 @@ document.getElementById("form-login").addEventListener("submit", async function 
         mot_de_passe: document.getElementById("login-mdp").value
     };
 
-    const reponse = await fetch("http://localhost:8080/login", {
+    const reponse = await fetch("/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(identifiants)
@@ -86,7 +86,11 @@ document.getElementById("form-login").addEventListener("submit", async function 
     if (reponse.ok) {
         //sauveragrde le token reçu
         localStorage.setItem("token", data.token);
-        document.getElementById("login-statut").textContent = "Connecté!";
+        localStorage.setItem("role", data.role);
+        
+        if(data.role === "particulier"){
+            window.location.href= "/static/particulier.html"
+        }
     } else {
         document.getElementById("login-statut").textContent = "Erreur"
     }
@@ -104,7 +108,7 @@ function preparerModification(id, nom, email, role) {
 
 async function chargerCategories() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("http://localhost:8080/categoriePresta");
+    const reponse = await fetch("/categoriePresta");
     //transforme la reponse en objet js
     const categorie = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -139,7 +143,7 @@ function preparerModificationCat(id, nom, description) {
 
 async function supprimerCategorie(id) {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:8080/categoriePresta/${id}`, {
+    await fetch(`/categoriePresta/${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
     });
@@ -153,14 +157,14 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
         description: document.getElementById("cat-description").value,
     };
     if (idCatEnModification === null) {
-        await fetch("http://localhost:8080/categoriePresta", {
+        await fetch("/categoriePresta", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(nouvelCat)
         });
     } else {
         const token = localStorage.getItem("token");
-        await fetch(`http://localhost:8080/categoriePresta/${idCatEnModification}`, {
+        await fetch(`/categoriePresta/${idCatEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -179,7 +183,7 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
 
 async function chargerPrestation() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("http://localhost:8080/prestations");
+    const reponse = await fetch("/prestations");
     //transforme la reponse en objet js
     const prestation = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -220,7 +224,7 @@ function preparerModificationPresta(id, nom, description,typeOffre,tarif,capacit
 
 async function supprimerPresta(id) {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:8080/prestations/${id}`, {
+    await fetch(`/prestations/${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
     });
@@ -237,14 +241,14 @@ document.getElementById("form-prestation").addEventListener("submit", async func
         capacite_max: parseInt(document.getElementById("presta-CapaciteMax").value),
     };
     if (idPrestaEnModification === null) {
-        await fetch("http://localhost:8080/prestations", {
+        await fetch("/prestations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(nouvelPresta)
         });
     } else {
         const token = localStorage.getItem("token");
-        await fetch(`http://localhost:8080/prestations/${idPrestaEnModification}`, {
+        await fetch(`/prestations/${idPrestaEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -264,7 +268,7 @@ document.getElementById("form-prestation").addEventListener("submit", async func
 
 async function chargerEvenements() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("http://localhost:8080/evenements");
+    const reponse = await fetch("/evenements");
     //transforme la reponse en objet js
     const evenements = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -305,7 +309,7 @@ function preparerModificationEvents(id, titre, description,date_heure_debut,dure
 
 async function supprimerEvents(id) {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:8080/evenements/${id}`, {
+    await fetch(`/evenements/${id}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
     });
@@ -322,14 +326,14 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
         capacite_max: parseInt(document.getElementById("events_capacite_max").value),
     };
     if (idEventsEnModification === null) {
-        await fetch("http://localhost:8080/evenements", {
+        await fetch("/evenements", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(nouvelEvents)
         });
     } else {
         const token = localStorage.getItem("token");
-        await fetch(`http://localhost:8080/evenements/${idEventsEnModification}`, {
+        await fetch(`/evenements/${idEventsEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

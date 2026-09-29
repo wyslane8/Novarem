@@ -67,9 +67,9 @@ func main() {
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
 
 	r.GET("/annonces", getAnnonce)
-	r.POST("/annonces", creerAnnonce)
+	r.POST("/annonces", authConnecte(), creerAnnonce)
 	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
-	r.DELETE("/annonces/:id", authAdmin(), supprimerAnnonce)
+	r.DELETE("/annonces/:id", authConnecte(), supprimerAnnonce)
 
 	r.Run(":8080")
 }
@@ -193,7 +193,10 @@ func login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors de la génération du token"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"token": tokenSigne})
+	c.JSON(http.StatusOK, gin.H{
+		"token": tokenSigne,
+		"role":  utilisateur.Role,
+	})
 }
 
 func authAdmin() gin.HandlerFunc {
@@ -226,6 +229,38 @@ func authAdmin() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		c.Next()
+	}
+}
+
+func authConnecte() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//récupère l'en tete ou le front doit envoyer le token
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token manquant"})
+			c.Abort()
+			return
+		}
+
+		// enleve le mot bearer pour garder que le token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		//verification du token par rapport à la clé
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			return cleSecrete, nil
+		})
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token invalide"})
+			c.Abort()
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+
+		c.Set("userID", claims["id"])
+		c.Set("role", claims["role"])
 
 		c.Next()
 	}
@@ -372,6 +407,9 @@ func creerAnnonce(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
 		return
 	}
+
+	userID, _ := c.Get("userID")
+	nouvel.UtilisateurID = uint(userID.(float64))
 	if err := db.Create(&nouvel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
 		return
@@ -395,7 +433,21 @@ func modifierAnnonce(c *gin.Context) {
 }
 
 func supprimerAnnonce(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
 	id := c.Param("id")
+
+	var annonce Annonce
+	if err := db.First(&annonce, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "annonce introuvable"})
+		return
+	}
+
+	if role != "admin" && annonce.UtilisateurID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "vous ne pouvez supprimer que vos propres annonces"})
+		return
+	}
+
 	if err := db.Delete(&Annonce{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
 		return

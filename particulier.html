@@ -7,7 +7,87 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="#">UpcycleConnect</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <button class="nav-link" data-section="accueil">Accueil</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-section="depot">Dépôt</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-section="catalogue">Catalogue</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-section="conseil">Conseils</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-section="profil">Profil</button>
+        </li>
+      </ul>
+      <button class="btn btn-outline-secondary ms-auto" id="btn-logout">Déconnexion</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container mt-4">
+  <section id="section-accueil">
+    <h1>Accueil</h1>
+  </section>
+  <section id="section-depot" class="d-none">
+    <h1>Mes dépôts</h1>
+
+     <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Prix</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableau-depots"></tbody>
+    </table>
+
+    <h2 class="mt-4">Déposer un objet</h2>
+    <form id="form-depot">
+        <div class="mb-2">
+            <input type="text" id="depot-titre" placeholder="Titre" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="depot-description" placeholder="Description" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="depot-type" placeholder="Type d'annonce" class="form-control">
+        </div>
+        <div class="mb-2">
+            <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01">
+        </div>
+        <button type="submit" class="btn btn-primary">Déposer</button>
+    </form>
+  </section>
+
+  <section id="section-catalogue" class="d-none">
+    <h1>Catalogue</h1>
+  </section>
+  <section id="section-conseil" class="d-none">
+    <h1>Conseils</h1>
+  </section>
+  <section id="section-profil" class="d-none">
+    <h1>Mon profil</h1>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/particulier.js"></script>
 </body>
 
 </html>
