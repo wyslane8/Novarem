@@ -36,3 +36,14 @@ type Evenement struct {
 	DureeMinutes   int    `json:"duree_minutes"`
 	CapaciteMax    int    `json:"capacite_max"`
 }
+
+type Annonce struct {
+	gorm.Model
+	Titre           string  `json:"titre"`
+	Description     string  `json:"description"`
+	DatePublication string  `json:"date_publication"`
+	TypeAnnonce     string  `json:"type_annonce"`
+	PrixVente       float64 `json:"prix_vente"`
+	Statut          string  `json:"statut"`
+	UtilisateurID   uint    `json:"utilisateur_id"`
+}

@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
-
+	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -17,6 +19,8 @@ import (
 var db *gorm.DB
 
 func main() {
+	godotenv.Load()
+	cleSecrete = []byte(os.Getenv("JWT_SECRET"))
 	var err error
 	//gorm.Open... = ouvre ou crée un fichier novarem.db qui sera la BDD, gestion des erreurs
 	db, err = gorm.Open(sqlite.Open("novarem.db"), &gorm.Config{})
@@ -29,6 +33,7 @@ func main() {
 	db.AutoMigrate(&CategoriePrestation{})
 	db.AutoMigrate(&Prestation{})
 	db.AutoMigrate(&Evenement{})
+	db.AutoMigrate(&Annonce{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -47,19 +52,24 @@ func main() {
 	r.POST("/login", login)
 
 	r.GET("/categoriePresta", getCategories)
-	r.POST("/categoriePresta", creerCategorie)
+	r.POST("/categoriePresta", authAdmin(), creerCategorie)
 	r.PUT("/categoriePresta/:id", authAdmin(), modifierCategorie)
 	r.DELETE("/categoriePresta/:id", authAdmin(), supprimerCategorie)
 
 	r.GET("/prestations", getPrestation)
-	r.POST("/prestations", creerPrestation)
-	r.PUT("/prestations/:id", authAdmin(),modifierPrestation)
+	r.POST("/prestations", authAdmin(), creerPrestation)
+	r.PUT("/prestations/:id", authAdmin(), modifierPrestation)
 	r.DELETE("/prestations/:id", authAdmin(), supprimerPrestation)
 
 	r.GET("/evenements", getEvenement)
-	r.POST("/evenements", creerEvenement)
-	r.PUT("/evenements/:id", authAdmin(),modifierEvenement)
+	r.POST("/evenements", authAdmin(), creerEvenement)
+	r.PUT("/evenements/:id", authAdmin(), modifierEvenement)
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
+
+	r.GET("/annonces", getAnnonce)
+	r.POST("/annonces", creerAnnonce)
+	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
+	r.DELETE("/annonces/:id", authAdmin(), supprimerAnnonce)
 
 	r.Run(":8080")
 }
@@ -145,7 +155,7 @@ func supprimerUtilisateur(c *gin.Context) {
 }
 
 // clé du serveur , utilisée pour signer et verifier les token, pour l'instant je l'ai mise ici mais je devrais la mettre dans une variable d'envionnement
-var cleSecrete = []byte("change-moi-en-vrai-secret")
+var cleSecrete []byte
 
 type idenfiants struct {
 	Email      string `json:"email"`
@@ -348,4 +358,47 @@ func supprimerEvenement(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "évènements supprimée"})
+}
+
+func getAnnonce(c *gin.Context) {
+	var annonce []Annonce
+	db.Find(&annonce)
+	c.JSON(http.StatusOK, annonce)
+}
+
+func creerAnnonce(c *gin.Context) {
+	var nouvel Annonce
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}
+
+func modifierAnnonce(c *gin.Context) {
+	id := c.Param("id")
+	var annonce Annonce
+	if err := db.First(&annonce, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "Annonces introuvables"})
+		return
+	}
+	if err := c.ShouldBindJSON(&annonce); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+	db.Save(&annonce)
+	c.JSON(http.StatusOK, annonce)
+}
+
+func supprimerAnnonce(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&Annonce{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "annonce supprimée"})
 }
