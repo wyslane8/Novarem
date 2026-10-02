@@ -67,9 +67,13 @@ func main() {
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
 
 	r.GET("/annonces", getAnnonce)
+	r.GET("/mesannonces",authConnecte(),getMesAnnonces)
 	r.POST("/annonces", authConnecte(), creerAnnonce)
 	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
 	r.DELETE("/annonces/:id", authConnecte(), supprimerAnnonce)
+
+	r.GET("/profil",authConnecte(),getProfile)
+	r.PUT("/profil",authConnecte(),modifierProfil)
 
 	r.Run(":8080")
 }
@@ -454,3 +458,51 @@ func supprimerAnnonce(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "annonce supprimée"})
 }
+
+func getMesAnnonces(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var annonces []Annonce
+	db.Where("utilisateur_id = ?", uint(userID.(float64))).Find(&annonces)
+
+	c.JSON(http.StatusOK, annonces)
+}
+
+
+func getProfile(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	var utilisateur Utilisateur
+	db.First(&utilisateur, uint(userID.(float64)))
+	utilisateur.MotDePasse = ""
+	c.JSON(http.StatusOK, utilisateur)
+}
+
+func modifierProfil(c *gin.Context) {
+	userID, _:= c.Get("userID")
+	var utilisateur Utilisateur
+	if err := db.First(&utilisateur, uint(userID.(float64))).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "utilisateur introuvables"})
+		return
+	}
+	if err := c.ShouldBindJSON(&utilisateur); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+
+	ancienMotDePasse := utilisateur.MotDePasse
+
+	if utilisateur.MotDePasse == "" {
+		utilisateur.MotDePasse = ancienMotDePasse
+	} else {
+		hash, err := bcrypt.GenerateFromPassword([]byte(utilisateur.MotDePasse), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
+			return
+		}
+		utilisateur.MotDePasse = string(hash)
+	}
+	db.Save(&utilisateur)
+	utilisateur.MotDePasse = ""
+	c.JSON(http.StatusOK, utilisateur)
+}
+

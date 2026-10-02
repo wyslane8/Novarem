@@ -1,4 +1,4 @@
-
+let tousLesObjets = [];
 const token = localStorage.getItem("token");
 if (!token) {
   window.location.href = "/";
@@ -76,6 +76,8 @@ document.getElementById("form-depot").addEventListener("submit", async function 
    
     document.getElementById("form-depot").reset();
     chargerDepots();
+    chargerCatalogue();
+    
 });
 
 async function supprimerDepots(id) {
@@ -85,4 +87,82 @@ async function supprimerDepots(id) {
         headers: { "Authorization": "Bearer " + token }
     });
     chargerDepots();
+    chargerCatalogue();
 }
+
+async function chargerProfil() {
+    const reponse = await fetch("/profil", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    })
+    const profil = await reponse.json();
+    document.getElementById("profil-nom").value = profil.nom;
+    document.getElementById("profil-email").value = profil.email;
+    document.getElementById("profil-mdp").value = ""
+
+}
+chargerProfil();
+
+
+document.getElementById("form-profil").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouveauProfil = {
+        nom: document.getElementById("profil-nom").value,
+        email: document.getElementById("profil-email").value,
+        mot_de_passe: document.getElementById("profil-mdp").value,
+    };
+        const token = localStorage.getItem("token");
+        await fetch("/profil", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+        body : JSON.stringify(nouveauProfil)
+    });
+
+   
+    document.getElementById("form-profil").reset();
+});
+
+async function chargerCatalogue(){
+    const reponse = await fetch("/annonces");
+    tousLesObjets = await reponse.json()
+    tousLesObjets = tousLesObjets.filter(c =>c.statut === "VALIDE")
+    afficherCatalogue(tousLesObjets)
+}
+chargerCatalogue();
+function afficherCatalogue(liste) {
+    const tbody = document.getElementById("tableau-catalogue");
+    tbody.innerHTML ="";
+    // ici pour chaque user reçu, on construit une ligne de tableau 
+    liste.forEach(c => {
+        const ligne = `
+    <tr>
+        <td>${c.titre}</td>
+        <td>${c.description}</td>
+        <td>${c.type_annonce}</td>
+        <td>${c.prix_vente}</td>
+    </tr>
+    `;
+        tbody.innerHTML += ligne;
+    })
+}
+
+document.getElementById("recherche-catalogue").addEventListener("input",function(){
+    const text = this.value.toLowerCase();
+    const resultat = tousLesObjets.filter(c => c.titre.toLowerCase().includes(text));
+    afficherCatalogue(resultat);
+
+});
+
+document.getElementById("filtre-categorie").addEventListener("change",function(){
+    const categorie = this.value;
+    let resultat ;
+    if(categorie === "" ){
+        resultat = tousLesObjets;
+    }else{
+        resultat = tousLesObjets.filter(c => c.type_annonce === categorie);
+    }
+    afficherCatalogue(resultat);
+
+});

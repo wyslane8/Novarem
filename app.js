@@ -87,9 +87,9 @@ document.getElementById("form-login").addEventListener("submit", async function 
         //sauveragrde le token reçu
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
-        
-        if(data.role === "particulier"){
-            window.location.href= "/static/particulier.html"
+
+        if (data.role === "particulier") {
+            window.location.href = "/static/particulier.html"
         }
     } else {
         document.getElementById("login-statut").textContent = "Erreur"
@@ -213,7 +213,7 @@ async function chargerPrestation() {
 chargerPrestation();
 
 let idPrestaEnModification = null;
-function preparerModificationPresta(id, nom, description,typeOffre,tarif,capaciteMax) {
+function preparerModificationPresta(id, nom, description, typeOffre, tarif, capaciteMax) {
     idPrestaEnModification = id;
     document.getElementById("presta-nom").value = nom;
     document.getElementById("presta-description").value = description;
@@ -298,7 +298,7 @@ async function chargerEvenements() {
 chargerEvenements();
 
 let idEventsEnModification = null;
-function preparerModificationEvents(id, titre, description,date_heure_debut,duree_minutes,capacite_max) {
+function preparerModificationEvents(id, titre, description, date_heure_debut, duree_minutes, capacite_max) {
     idEventsEnModification = id;
     document.getElementById("events_titre").value = titre;
     document.getElementById("events_description").value = description;
@@ -346,3 +346,59 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
     document.getElementById("form-evenement").reset();
     chargerEvenements();
 });
+
+
+async function chargerDepots() {
+    //envoi uen requete GET a l'API grâce a "fetch"
+    const reponse = await fetch("/annonces");
+    //transforme la reponse en objet js
+    const depots = await reponse.json()
+    //recupere l'element HTML avec l'id c'est donc tbdoy
+    const tbody = document.getElementById("tableau-depot");
+    //tableau vide car on va le remplir apres 
+    tbody.innerHTML = "";
+    // ici pour chaque user reçu, on construit une ligne de tableau 
+    depots.forEach(d => {
+        const ligne = `
+    <tr>
+        <td>${d.ID}</td>
+        <td>${d.titre}</td>
+        <td>${d.description}</td>
+        <td>${d.type_annonce}</td>
+         <td>${d.prix_vente}</td>
+        <td>${d.statut}</td>
+        <td>${d.utilisateur_id}</td>
+        <td>
+            <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+            <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+        </td>
+    </tr>
+    `;
+        tbody.innerHTML += ligne;
+    })
+
+}
+chargerDepots();
+
+async function validerAnnonce(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/annonces/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ statut: "VALIDE" })
+    });
+    chargerDepots();
+}
+
+async function supprimerDepots(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/annonces/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    chargerDepots();
+}
+

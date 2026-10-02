@@ -16,7 +16,7 @@
                 <input type="email" id="login-email" placeholder="Email" class="form-control" required>
             </div>
             <div class="mb-2">
-                <input type="password" id="login-mdp" placeholder="Mot de passe" class="form-control"  required>
+                <input type="password" id="login-mdp" placeholder="Mot de passe" class="form-control" required>
             </div>
             <button type="submit" class="btn btn-secondary">Se connecter</button>
         </form>
@@ -51,7 +51,7 @@
             <input type="email" id="input-email" placeholder="Email" class="form-control" required>
         </div>
         <div class="mb-2">
-            <input type="password" id="input-mdp" placeholder="Mot de passe" class="form-control" >
+            <input type="password" id="input-mdp" placeholder="Mot de passe" class="form-control">
         </div>
         <div class="mb-2">
             <select id="input-role" class="form-control">
@@ -148,25 +148,44 @@
         </table>
     </div>
 
-    <h2 class="mt-4">Ajouter un évènements</h2>
+    <h2 class="mt-4">Ajouter un evenemnts</h2>
     <form id="form-evenement">
         <div class="mb-2">
-            <input type="text" id="events_titre" placeholder="titre" class="form-control" required>
+            <input type="text" id="events-nom" placeholder="Nom" class="form-control" required>
         </div>
         <div class="mb-2">
-            <input type="text" id="events_description" placeholder="description" class="form-control" required>
+            <input type="text" id="events-description" placeholder="Description" class="form-control" required>
         </div>
         <div class="mb-2">
-            <input type="text" id="events_date" placeholder="date_heure_debut" class="form-control" required>
+            <input type="text" id="events-TypeOffre" placeholder="Type d'Offre" class="form-control" required>
         </div>
         <div class="mb-2">
-            <input type="number" id="events_duree" placeholder="duree_minutes" class="form-control" required>
+            <input type="number" id="events-Tarif" placeholder="Tarif" class="form-control" required step="0.01">
         </div>
         <div class="mb-2">
-            <input type="number" id="events_capacite_max" placeholder="capacité Maximum" class="form-control" required>
+            <input type="number" id="events-CapaciteMax" placeholder="Capacité Maximum" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Créer</button>
     </form>
+
+
+    <h1>Tous les dépôts</h1>
+
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Prix</th>
+                <th>Statut</th>
+                <th>Utilisateur</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableau-depot"></tbody>
+    </table>
 
     <script src="/static/app.js"></script>
 </body>
