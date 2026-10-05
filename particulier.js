@@ -98,7 +98,12 @@ async function supprimerDepots(id) {
 async function chargerProfil() {
     const reponse = await fetch("/profil", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-    })
+    });
+    if(reponse.status == 401){
+        localStorage.removeItem("token");
+        window.location.href ="/";
+        return;
+    }
     const profil = await reponse.json();
     document.getElementById("profil-nom").value = profil.nom;
     document.getElementById("profil-email").value = profil.email;
