@@ -402,3 +402,54 @@ async function supprimerDepots(id) {
     chargerDepots();
 }
 
+
+
+async function chargerConseils() {
+    //envoi uen requete GET a l'API grâce a "fetch"
+    const reponse = await fetch("/conseils");
+    //transforme la reponse en objet js
+    const categorie = await reponse.json()
+    //recupere l'element HTML avec l'id c'est donc tbdoy
+    const tbody = document.getElementById("tableau-conseils");
+    //tableau vide car on va le remplir apres 
+    tbody.innerHTML = "";
+    // ici pour chaque user reçu, on construit une ligne de tableau 
+    categorie.forEach(c => {
+        const ligne = `
+    <tr>
+        <td>${c.ID}</td>
+        <td>${c.titre}</td>
+        <td>${c.contenu}</td>
+        <td>
+            <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+        </td>
+    </tr>
+    `;
+        tbody.innerHTML += ligne;
+    })
+
+}
+chargerConseils();
+
+
+document.getElementById("form-conseil").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouveauConseil = {
+        titre: document.getElementById("conseil-titre").value,
+        contenu: document.getElementById("conseil-contenu").value,
+    };
+    const token = localStorage.getItem("token");
+    await fetch ("/conseils",{
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(nouveauConseil)
+    });
+    document.getElementById("form-conseil").reset();
+    chargerConseils();
+    
+});
+
+

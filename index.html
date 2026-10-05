@@ -187,6 +187,31 @@
         <tbody id="tableau-depot"></tbody>
     </table>
 
+     <div class="container mt-4">
+        <h2>Conseils</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Contenu</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-conseils"></tbody>
+        </table>
+    </div>
+    <h2 class="mt-4">Ajouter un conseil</h2>
+    <form id="form-conseil">
+        <div class="mb-2">
+            <input type="text" id="conseil-titre" placeholder="Titre" class="form-control" required>
+        </div>
+        <div class="mb-2">
+            <input type="text" id="conseil-contenu" placeholder="Contenu" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+
     <script src="/static/app.js"></script>
 </body>
 

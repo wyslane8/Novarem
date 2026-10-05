@@ -131,6 +131,7 @@ async function chargerCatalogue(){
     afficherCatalogue(tousLesObjets)
 }
 chargerCatalogue();
+
 function afficherCatalogue(liste) {
     const tbody = document.getElementById("tableau-catalogue");
     tbody.innerHTML ="";
@@ -166,3 +167,48 @@ document.getElementById("filtre-categorie").addEventListener("change",function()
     afficherCatalogue(resultat);
 
 });
+
+
+async function chargerScore() {
+    const reponse = await fetch("/score", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    })
+    const data = await reponse.json();
+    document.getElementById("score-valeur").textContent = data.score;
+
+
+}
+chargerScore();
+
+const etapesTuto = [
+    {titre: "Bienvenue ! ", texte : "Découvrez UpcycleConnect."},
+    {titre: "Vos dépôts ! ", texte : " Déposez vos objets dans l'onglet dépôt."},
+    {titre: "Vos dépôts ! ", texte : " Déposez vos objets dans l'onglet dépôt."},
+];
+let etapeActuelle = 0;
+
+function afficherEtape(){
+    const tuto = etapesTuto[etapeActuelle];
+    document.getElementById("tuto-titre").textContent = tuto.titre;
+    document.getElementById("tuto-texte").textContent = tuto.texte;
+
+}
+
+document.getElementById("tuto-suivant").addEventListener("click", async function (e) {
+    e.preventDefault();
+    etapeActuelle++;
+    if(etapeActuelle >= etapesTuto.length){
+        document.getElementById("tuto-overlay").classList.add("d-none")
+        return;
+    }
+    afficherEtape();
+});
+
+function functionPremierLogin (){
+    if(localStorage.getItem("tutoVu") == null){
+        document.getElementById("tuto-overlay").classList.remove("d-none");
+        afficherEtape();
+        localStorage.setItem("tutoVu","oui")
+    }
+}
+functionPremierLogin();

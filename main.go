@@ -34,6 +34,7 @@ func main() {
 	db.AutoMigrate(&Prestation{})
 	db.AutoMigrate(&Evenement{})
 	db.AutoMigrate(&Annonce{})
+	db.AutoMigrate(&Conseil{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -67,13 +68,18 @@ func main() {
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
 
 	r.GET("/annonces", getAnnonce)
-	r.GET("/mesannonces",authConnecte(),getMesAnnonces)
+	r.GET("/mesannonces", authConnecte(), getMesAnnonces)
 	r.POST("/annonces", authConnecte(), creerAnnonce)
 	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
 	r.DELETE("/annonces/:id", authConnecte(), supprimerAnnonce)
 
-	r.GET("/profil",authConnecte(),getProfile)
-	r.PUT("/profil",authConnecte(),modifierProfil)
+	r.GET("/profil", authConnecte(), getProfile)
+	r.PUT("/profil", authConnecte(), modifierProfil)
+
+	r.GET("/score", authConnecte(), getScore)
+
+	r.GET("/conseils", getConseils)
+	r.POST("/conseils", authAdmin(), creerConseil)
 
 	r.Run(":8080")
 }
@@ -468,7 +474,6 @@ func getMesAnnonces(c *gin.Context) {
 	c.JSON(http.StatusOK, annonces)
 }
 
-
 func getProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var utilisateur Utilisateur
@@ -478,7 +483,7 @@ func getProfile(c *gin.Context) {
 }
 
 func modifierProfil(c *gin.Context) {
-	userID, _:= c.Get("userID")
+	userID, _ := c.Get("userID")
 	var utilisateur Utilisateur
 	if err := db.First(&utilisateur, uint(userID.(float64))).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"erreur": "utilisateur introuvables"})
@@ -506,3 +511,31 @@ func modifierProfil(c *gin.Context) {
 	c.JSON(http.StatusOK, utilisateur)
 }
 
+func getScore(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	var nombre int64
+	db.Model(&Annonce{}).Where("utilisateur_id = ?", uint(userID.(float64))).Count(&nombre)
+
+	score := nombre * 10
+	c.JSON(http.StatusOK, gin.H{"score": score})
+
+}
+
+func getConseils(c *gin.Context) {
+	var conseil []Conseil
+	db.Find(&conseil)
+	c.JSON(http.StatusOK, conseil)
+}
+
+func creerConseil(c *gin.Context) {
+	var nouvel Conseil
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}

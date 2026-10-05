@@ -1,0 +1,75 @@
+:root {
+    --vert: #7a9b76;          
+    --vert-fonce: #5c7a58;
+    --creme: #f5f3ee;
+    --gris: #4a4a4a;
+}
+
+body {
+    background-color: var(--creme);
+    color: var(--gris);
+    font-family: 'Poppins', sans-serif;
+}
+
+
+.navbar {
+    background-color: var(--vert) !important;
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+.navbar .navbar-brand,
+.navbar .nav-link {
+    color: white !important;
+}
+.navbar .nav-link:hover {
+    color: #d4e9dd !important;
+}
+
+
+h1, h2 {
+    color: var(--vert-fonce);
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+}
+
+
+main {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+}
+section {
+    margin-bottom: 2rem;
+}
+
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+
+.table {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.table thead {
+    background-color: var(--vert);
+    color: white;
+}
+
+
+.btn-primary {
+    background-color: var(--vert);
+    border-color: var(--vert);
+}
+.btn-primary:hover {
+    background-color: var(--vert-fonce);
+    border-color: var(--vert-fonce);
+}
+
+
+.form-control, .form-select {
+    border-radius: 8px;
+}

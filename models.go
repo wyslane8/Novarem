@@ -47,3 +47,9 @@ type Annonce struct {
 	Statut          string  `json:"statut"`
 	UtilisateurID   uint    `json:"utilisateur_id"`
 }
+
+type Conseil struct {
+	gorm.Model
+	Titre   string `json:"titre"`
+	Contenu string `json:"contenu"`
+}
