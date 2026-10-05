@@ -174,7 +174,9 @@ async function chargerScore() {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     })
     const data = await reponse.json();
+    const pourcentage = (data.score / 100) * 100;
     document.getElementById("score-valeur").textContent = data.score;
+    document.getElementById("score-barre").style.width = pourcentage + "%" ; 
 
 
 }
