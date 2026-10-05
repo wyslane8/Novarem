@@ -80,6 +80,7 @@ func main() {
 
 	r.GET("/conseils", getConseils)
 	r.POST("/conseils", authAdmin(), creerConseil)
+	r.DELETE("/conseils/:id", authAdmin(), supprimerConseil)
 
 	r.Run(":8080")
 }
@@ -538,4 +539,13 @@ func creerConseil(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, nouvel)
+}
+
+func supprimerConseil(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&Conseil{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "évènements supprimée"})
 }

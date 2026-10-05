@@ -452,4 +452,12 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
     
 });
 
+async function supprimerConseil(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/conseils/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    chargerConseils();
+}
 
