@@ -106,6 +106,7 @@ async function chargerProfil() {
     }
     const profil = await reponse.json();
     document.getElementById("profil-nom").value = profil.nom;
+    document.getElementById("accueil-nom").textContent = profil.nom;
     document.getElementById("profil-email").value = profil.email;
     document.getElementById("profil-mdp").value = ""
 
@@ -248,3 +249,35 @@ function functionPremierLogin() {
     }
 }
 functionPremierLogin();
+
+async function chargerApercuDepots() {
+    const reponse = await fetch("/mesannonces",{
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    });
+
+    const apercu = await reponse.json();
+    const div = document.getElementById("accueil-depots");
+    div.innerHTML = "";
+
+    if(apercu.length ===0){
+        div.innerHTML = `<p class="text-muted">Aucun dépôt pour l'instant.</p>`;
+        return;
+    }
+
+    const troiderniers = apercu.slice(0,3)
+
+    troiderniers.forEach(a => {
+        const bloc = `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${a.titre}</h5>
+                <p class="card-text">${a.contenu}</p>
+            </div>
+        </div>
+        `;
+        div.innerHTML += bloc;
+    });
+}
+chargerApercuDepots();
