@@ -316,6 +316,7 @@ async function supprimerEvents(id) {
     chargerEvenements();
 }
 
+
 document.getElementById("form-evenement").addEventListener("submit", async function (e) {
     e.preventDefault();
     const nouvelEvents = {
@@ -325,14 +326,17 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
         duree_minutes: parseFloat(document.getElementById("events_duree").value),
         capacite_max: parseInt(document.getElementById("events_capacite_max").value),
     };
+    const token = localStorage.getItem("token");
     if (idEventsEnModification === null) {
         await fetch("/evenements", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
             body: JSON.stringify(nouvelEvents)
         });
     } else {
-        const token = localStorage.getItem("token");
         await fetch(`/evenements/${idEventsEnModification}`, {
             method: "PUT",
             headers: {
@@ -340,13 +344,12 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelEvents)
-        })
+        });
         idEventsEnModification = null;
     }
     document.getElementById("form-evenement").reset();
     chargerEvenements();
 });
-
 
 async function chargerDepots() {
     //envoi uen requete GET a l'API grâce a "fetch"

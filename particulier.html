@@ -52,6 +52,9 @@
                         <button class="nav-link" data-section="conseil">Conseils</button>
                     </li>
                     <li class="nav-item">
+                        <button class="nav-link" data-section="evenements">Evènements</button>
+                    </li>
+                    <li class="nav-item">
                         <button class="nav-link" data-section="profil">Profil</button>
                     </li>
                 </ul>
@@ -74,8 +77,11 @@
                 <div class="progress-bar" id="score-barre" role="progressbar" style="width: 0%"></div>
             </div>
             <h2 class="mt-4">Mes derniers dépôts</h2>
-            <div id ="accueil-depots"></div>
+            <div id="accueil-depots"></div>
+            <h2 class="mt-4">Mon planning</h2>
+            <div id="accueil-planning"></div>
         </section>
+
 
         <section id="section-depot" class="d-none">
             <h1>Mes dépôts</h1>
@@ -111,7 +117,8 @@
                     </select>
                 </div>
                 <div class="mb-2">
-                    <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01" min="0"required>
+                    <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01"
+                        min="0" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Déposer</button>
             </form>
@@ -140,24 +147,32 @@
             </table>
 
         </section>
+        <section id="section-conseil" class="d-none">
+            <h1>Conseils</h1>
+            <div id="liste-conseils"></div>
+        </section>
+        <section id="section-evenements" class="d-none">
+            <h1>Événements</h1>
+            <div id="liste-evenements-dispo"></div>
+        </section>
         <section id="section-profil" class="d-none">
-    <h1>Mon profil</h1>
+            <h1>Mon profil</h1>
 
-    <div class="card mb-4" style="max-width:500px">
-        <div class="card-body">
-            <div class="d-flex align-items-center mb-3">
-                <div class="ms-3">
-                    <h4 class="mb-0" id="profil-affiche-nom"></h4>
-                    <span class="badge bg-success" id="profil-affiche-role"></span>
+            <div class="card mb-4" style="max-width:500px">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="ms-3">
+                            <h4 class="mb-0" id="profil-affiche-nom"></h4>
+                            <span class="badge bg-success" id="profil-affiche-role"></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="mb-1"><strong>Email :</strong> <span id="profil-affiche-email"></span></p>
+                    <p class="mb-0"><strong>Membre depuis :</strong> <span id="profil-affiche-date"></span></p>
                 </div>
             </div>
-            <hr>
-            <p class="mb-1"><strong>Email :</strong> <span id="profil-affiche-email"></span></p>
-            <p class="mb-0"><strong>Membre depuis :</strong> <span id="profil-affiche-date"></span></p>
-        </div>
-    </div>
 
-    <h2>Modifier mes informations</h2>
+            <h2>Modifier mes informations</h2>
 
             <form id="form-profil">
                 <!--margin bottom -->
@@ -174,6 +189,7 @@
                 <button type="submit" class="btn btn-primary">Enregister</button>
             </form>
         </section>
+
     </main>
 
     <div id="tuto-overlay" class="tuto-overlay d-none">

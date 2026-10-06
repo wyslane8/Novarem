@@ -35,6 +35,7 @@ func main() {
 	db.AutoMigrate(&Evenement{})
 	db.AutoMigrate(&Annonce{})
 	db.AutoMigrate(&Conseil{})
+	db.AutoMigrate(&Inscription{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -81,6 +82,9 @@ func main() {
 	r.GET("/conseils", getConseils)
 	r.POST("/conseils", authAdmin(), creerConseil)
 	r.DELETE("/conseils/:id", authAdmin(), supprimerConseil)
+
+	r.POST("/inscriptions", authConnecte(), sInscrire)
+	r.GET("/mes-inscriptions", authConnecte(), getMesInscriptions)
 
 	r.Run(":8080")
 }
@@ -548,4 +552,46 @@ func supprimerConseil(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "évènements supprimée"})
+}
+
+func sInscrire(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var inscription Inscription
+	if err := c.ShouldBindJSON(&inscription); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrectes"})
+		return
+	}
+
+	inscription.UtilisateurID = uint(userID.(float64))
+	var existante Inscription
+	erreur := db.Where("utilisateur_id = ? AND evenement_id = ?", inscription.UtilisateurID, inscription.EvenementID).First(&existante).Error
+	if erreur == nil {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "vous êtes déjà inscrit à cet événement"})
+		return
+	}
+
+	if err := db.Create(&inscription).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "inscription impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, inscription)
+
+}
+
+func getMesInscriptions(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var inscriptions []Inscription
+	db.Where("utilisateur_id = ?", uint(userID.(float64))).Find(&inscriptions)
+
+	var evenementIDs []uint
+	for _, i := range inscriptions {
+		evenementIDs = append(evenementIDs, i.EvenementID)
+	}
+
+	var evenements []Evenement
+	db.Where("id IN ?", evenementIDs).Find(&evenements)
+
+	c.JSON(http.StatusOK, evenements)
 }

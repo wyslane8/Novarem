@@ -28,7 +28,9 @@ afficherSection("accueil");
 
 async function chargerDepots() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("/annonces");
+    const reponse = await fetch("/mesannonces", {
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("token")}
+    });
     //transforme la reponse en objet js
     const depots = await reponse.json()
     if (depots.length === 0) {
@@ -278,7 +280,7 @@ async function chargerApercuDepots() {
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">${a.titre}</h5>
-                <p class="card-text">${a.contenu}</p>
+                <p class="card-text">${a.statut}</p>
             </div>
         </div>
         `;
@@ -286,3 +288,76 @@ async function chargerApercuDepots() {
     });
 }
 chargerApercuDepots();
+
+async function chargerEvenementsDispo() {
+    const reponse = await fetch("/evenements");
+    const events = await reponse.json();
+    const div = document.getElementById("liste-evenements-dispo");
+    div.innerHTML = "";
+
+    if (events.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucun évènements pour le moment.</p>`;
+        return;
+    }
+
+    events.forEach(e => {
+        const bloc = `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${e.titre}</h5>
+                <p class="card-text">${e.description}</p>
+                <p class="card-text">${e.date_heure_debut}</p>
+                <p class="card-text">${e.duree_minutes}</p>
+                <p class="card-text">${e.capacite_max}</p>
+                <button onclick="sInscrireEvenement(${e.ID})" class="btn btn-primary btn-sm">S'inscrire</button>
+            </div>
+        </div>
+        `;
+        div.innerHTML += bloc;
+    });
+}
+chargerEvenementsDispo();
+
+async function sInscrireEvenement(id) {
+    const token = localStorage.getItem("token");
+    await fetch("/inscriptions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ evenement_id: id })
+    });
+    alert("Inscription réussie !");
+chargerMonPlanning();
+}
+
+async function chargerMonPlanning() {
+    const reponse = await fetch("/mes-inscriptions",{
+        headers:{ "Authorization": "Bearer " + localStorage.getItem("token")}
+    });
+
+    const events = await reponse.json();
+    const div = document.getElementById("accueil-planning");
+    div.innerHTML = "";
+
+    if (events.length === 0) {
+        div.innerHTML = `<p class="text-muted">Vous n'êtes inscrit à aucun évènements.</p>`;
+        return;
+    }
+
+    events.forEach(e => {
+        const bloc = `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${e.titre}</h5>
+                <p class="card-text">${e.date_heure_debut}</p>
+                <p class="card-text">${e.duree_minutes}</p>
+                <p class="card-text">${e.capacite_max}</p>
+            </div>
+        </div>
+        `;
+        div.innerHTML += bloc;
+    });
+}
+chargerMonPlanning();

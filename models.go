@@ -53,3 +53,9 @@ type Conseil struct {
 	Titre   string `json:"titre"`
 	Contenu string `json:"contenu"`
 }
+
+type Inscription struct{
+	gorm.Model
+	UtilisateurID uint `json:"utilisateur_id"`
+	EvenementID uint `json:"evenement_id"`
+}
