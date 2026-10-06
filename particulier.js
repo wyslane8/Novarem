@@ -99,9 +99,9 @@ async function chargerProfil() {
     const reponse = await fetch("/profil", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     });
-    if(reponse.status == 401){
+    if (reponse.status == 401) {
         localStorage.removeItem("token");
-        window.location.href ="/";
+        window.location.href = "/";
         return;
     }
     const profil = await reponse.json();
@@ -109,10 +109,15 @@ async function chargerProfil() {
     document.getElementById("accueil-nom").textContent = profil.nom;
     document.getElementById("profil-email").value = profil.email;
     document.getElementById("profil-mdp").value = ""
+    document.getElementById("profil-affiche-nom").textContent = profil.nom;
+    document.getElementById("profil-affiche-email").textContent = profil.email;
+    document.getElementById("profil-affiche-role").textContent = profil.role;
+    const date = new Date(profil.CreatedAt);
+    document.getElementById("profil-affiche-date").textContent = date.toLocaleDateString("fr-FR")
+
 
 }
 chargerProfil();
-
 
 document.getElementById("form-profil").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -251,7 +256,7 @@ function functionPremierLogin() {
 functionPremierLogin();
 
 async function chargerApercuDepots() {
-    const reponse = await fetch("/mesannonces",{
+    const reponse = await fetch("/mesannonces", {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -261,12 +266,12 @@ async function chargerApercuDepots() {
     const div = document.getElementById("accueil-depots");
     div.innerHTML = "";
 
-    if(apercu.length ===0){
+    if (apercu.length === 0) {
         div.innerHTML = `<p class="text-muted">Aucun dépôt pour l'instant.</p>`;
         return;
     }
 
-    const troiderniers = apercu.slice(0,3)
+    const troiderniers = apercu.slice(0, 3)
 
     troiderniers.forEach(a => {
         const bloc = `

@@ -111,7 +111,7 @@
                     </select>
                 </div>
                 <div class="mb-2">
-                    <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01">
+                    <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01" min="0"required>
                 </div>
                 <button type="submit" class="btn btn-primary">Déposer</button>
             </form>
@@ -122,10 +122,10 @@
             <input type="text" id="recherche-catalogue" placeholder="Rechercher...">
             <select id="filtre-categorie">
                 <option value="">Toutes les catégories</option>
-                <option value="mobilier">Mobilier</option>
-                <option value="vetements">Vêtements</option>
-                <option value="electronique">Électronique</option>
-                <option value="decoration">Décoration</option>
+                <option value="Mobilier">Mobilier</option>
+                <option value="Vêtements">Vêtements</option>
+                <option value="Électronique">Électronique</option>
+                <option value="Décoration">Décoration</option>
             </select>
             <table class="table table-striped mt-3">
                 <thead>
@@ -140,12 +140,25 @@
             </table>
 
         </section>
-        <section id="section-conseil" class="d-none">
-            <h1>Conseils</h1>
-            <div id="liste-conseils"></div>
-        </section>
         <section id="section-profil" class="d-none">
-            <h1>Mon profil</h1>
+    <h1>Mon profil</h1>
+
+    <div class="card mb-4" style="max-width:500px">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="ms-3">
+                    <h4 class="mb-0" id="profil-affiche-nom"></h4>
+                    <span class="badge bg-success" id="profil-affiche-role"></span>
+                </div>
+            </div>
+            <hr>
+            <p class="mb-1"><strong>Email :</strong> <span id="profil-affiche-email"></span></p>
+            <p class="mb-0"><strong>Membre depuis :</strong> <span id="profil-affiche-date"></span></p>
+        </div>
+    </div>
+
+    <h2>Modifier mes informations</h2>
+
             <form id="form-profil">
                 <!--margin bottom -->
                 <div class="mb-2">
