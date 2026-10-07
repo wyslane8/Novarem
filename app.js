@@ -1,7 +1,9 @@
 //fonction qui attend une reponse du serveur avant de continuer 
 async function chargerUtilisateurs() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("/utilisateurs");
+    const reponse = await fetch("/utilisateurs", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
     //transforme la reponse en objet js
     const utilisateurs = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -40,7 +42,10 @@ document.getElementById("form-user").addEventListener("submit", async function (
     if (idEnModification === null) {
         await fetch("/utilisateurs", {
             method: "POST",
-            headers: { "Content-type": "application/json" },
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
             body: JSON.stringify(nouvelUser)
         });
     } else {
@@ -92,8 +97,8 @@ document.getElementById("form-login").addEventListener("submit", async function 
             window.location.href = "/static/particulier.html"
         }
     } else {
-        document.getElementById("login-statut").textContent = "Erreur"
-    }
+        window.location.reload();
+        }
 });
 
 let idEnModification = null;
@@ -159,7 +164,10 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
     if (idCatEnModification === null) {
         await fetch("/categoriePresta", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json" ,
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
             body: JSON.stringify(nouvelCat)
         });
     } else {
@@ -243,7 +251,10 @@ document.getElementById("form-prestation").addEventListener("submit", async func
     if (idPrestaEnModification === null) {
         await fetch("/prestations", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json" ,
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
             body: JSON.stringify(nouvelPresta)
         });
     } else {
@@ -373,6 +384,7 @@ async function chargerDepots() {
         <td>${d.utilisateur_id}</td>
         <td>
             <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+            <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
             <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
         </td>
     </tr>
@@ -392,6 +404,19 @@ async function validerAnnonce(id) {
             "Authorization": "Bearer " + token
         },
         body: JSON.stringify({ statut: "VALIDE" })
+    });
+    chargerDepots();
+}
+
+async function refuserAnnonce(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/annonces/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ statut: "REFUSE" })
     });
     chargerDepots();
 }
@@ -442,9 +467,9 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
         contenu: document.getElementById("conseil-contenu").value,
     };
     const token = localStorage.getItem("token");
-    await fetch ("/conseils",{
+    await fetch("/conseils", {
         method: "POST",
-        headers:{
+        headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
         },
@@ -452,7 +477,7 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
     });
     document.getElementById("form-conseil").reset();
     chargerConseils();
-    
+
 });
 
 async function supprimerConseil(id) {

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"math/rand"
 )
 
 // variable globale qui va contenir la connexion à la base
@@ -36,6 +37,7 @@ func main() {
 	db.AutoMigrate(&Annonce{})
 	db.AutoMigrate(&Conseil{})
 	db.AutoMigrate(&Inscription{})
+	db.AutoMigrate(&DepotConteneur{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -47,7 +49,7 @@ func main() {
 	r.StaticFile("/", "./index.html")
 
 	//quand qn appelles /utilisateurs on execute la fonction getUtilisateurs qui recupere tous les user de la base (db.find) et les renvoie avce un code 200 (http.StatusOK)
-	r.GET("/utilisateurs", getUtilisateurs)
+	r.GET("/utilisateurs", authAdmin(), getUtilisateurs)
 	r.POST("/utilisateurs", creerUtilisateur)
 	r.PUT("/utilisateurs/:id", authAdmin(), modifierUtilisateur)
 	r.DELETE("/utilisateurs/:id", authAdmin(), supprimerUtilisateur)
@@ -67,6 +69,7 @@ func main() {
 	r.POST("/evenements", authAdmin(), creerEvenement)
 	r.PUT("/evenements/:id", authAdmin(), modifierEvenement)
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
+	r.GET("/evenements/:id/places", getPlacesEvenement)
 
 	r.GET("/annonces", getAnnonce)
 	r.GET("/mesannonces", authConnecte(), getMesAnnonces)
@@ -85,6 +88,12 @@ func main() {
 
 	r.POST("/inscriptions", authConnecte(), sInscrire)
 	r.GET("/mes-inscriptions", authConnecte(), getMesInscriptions)
+
+	r.GET("/depotconteneurs", getConteneur)
+	r.GET("/depotmesconteneurs", authConnecte(), getmesConteneur)
+	r.POST("/depotconteneurs", authConnecte(), creerConteneur)
+	r.PUT("/depotconteneurs/:id", authAdmin(), modifierConteneur)
+	r.DELETE("/depotconteneurs/:id", authConnecte(), supprimerConteneur)
 
 	r.Run(":8080")
 }
@@ -373,6 +382,13 @@ func getEvenement(c *gin.Context) {
 	c.JSON(http.StatusOK, evenement)
 }
 
+func getPlacesEvenement(c *gin.Context) {
+	id := c.Param("id")
+	var nombre int64
+	db.Model(&Inscription{}).Where("evenement_id = ?", id).Count(&nombre)
+	c.JSON(http.StatusOK, gin.H{"inscrits": nombre})
+}
+
 func creerEvenement(c *gin.Context) {
 	var nouvel Evenement
 	if err := c.ShouldBindJSON(&nouvel); err != nil {
@@ -594,4 +610,75 @@ func getMesInscriptions(c *gin.Context) {
 	db.Where("id IN ?", evenementIDs).Find(&evenements)
 
 	c.JSON(http.StatusOK, evenements)
+}
+
+func getConteneur(c *gin.Context) {
+	var conteneur []DepotConteneur
+	db.Find(&conteneur)
+	c.JSON(http.StatusOK, conteneur)
+}
+
+func getmesConteneur(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var conteneur []DepotConteneur
+	db.Where("utilisateur_id = ?", uint(userID.(float64))).Find(&conteneur)
+
+	c.JSON(http.StatusOK, conteneur)
+}
+
+func creerConteneur(c *gin.Context) {
+	var nouvel DepotConteneur
+	if err := c.ShouldBindJSON(&nouvel); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+
+	userID, _ := c.Get("userID")
+	nouvel.UtilisateurID = uint(userID.(float64))
+	nouvel.Statut = "EN_ATTENTE"
+	if err := db.Create(&nouvel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+	c.JSON(http.StatusCreated, nouvel)
+}
+
+func modifierConteneur(c *gin.Context) {
+	id := c.Param("id")
+	var conteneur DepotConteneur
+	if err := db.First(&conteneur, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "Conteneur introuvables"})
+		return
+	}
+	conteneur.Statut = "VALIDE"
+	conteneur.CodeOuverture = fmt.Sprintf("%d", rand.Intn(900000)+100000)
+	conteneur.CodeBarres = fmt.Sprintf("UPC-%d", conteneur.ID)
+
+	db.Save(&conteneur)
+	c.JSON(http.StatusOK, conteneur)
+}
+
+
+func supprimerConteneur(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
+	id := c.Param("id")
+
+	var conteneur DepotConteneur
+	if err := db.First(&conteneur, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "conteneur introuvable"})
+		return
+	}
+
+	if role != "admin" && conteneur.UtilisateurID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "vous ne pouvez supprimer que vos propres conteneurs"})
+		return
+	}
+
+	if err := db.Delete(&DepotConteneur{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "suppression impossible"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "conteneur supprimée"})
 }

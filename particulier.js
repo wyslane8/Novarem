@@ -290,37 +290,60 @@ async function chargerApercuDepots() {
 chargerApercuDepots();
 
 async function chargerEvenementsDispo() {
-    const reponse = await fetch("/evenements");
-    const events = await reponse.json();
+    const token = localStorage.getItem("token");
+    // on charge les événements ET mes inscriptions en même temps
+    const [repEvents, repInscrits] = await Promise.all([
+        fetch("/evenements"),
+        fetch("/mes-inscriptions", { headers: { "Authorization": "Bearer " + token } })
+    ]);
+    const events = await repEvents.json();
+    const inscrits = await repInscrits.json();
+    // la liste des ID d'événements où je suis déjà inscrite
+    const idsInscrits = inscrits.map(e => e.ID);
+
     const div = document.getElementById("liste-evenements-dispo");
     div.innerHTML = "";
 
     if (events.length === 0) {
-        div.innerHTML = `<p class="text-muted">Aucun évènements pour le moment.</p>`;
+        div.innerHTML = `<p class="text-muted">Aucun évènement pour le moment.</p>`;
         return;
     }
+    for (const e of events) {
+    const dejaInscrit = idsInscrits.includes(e.ID);
 
-    events.forEach(e => {
-        const bloc = `
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">${e.titre}</h5>
-                <p class="card-text">${e.description}</p>
-                <p class="card-text">${e.date_heure_debut}</p>
-                <p class="card-text">${e.duree_minutes}</p>
-                <p class="card-text">${e.capacite_max}</p>
-                <button onclick="sInscrireEvenement(${e.ID})" class="btn btn-primary btn-sm">S'inscrire</button>
-            </div>
-        </div>
-        `;
-        div.innerHTML += bloc;
+    // on demande combien de personnes sont inscrites à cet événement
+    const repPlaces = await fetch(`/evenements/${e.ID}/places`);
+    const dataPlaces = await repPlaces.json();
+    const placesRestantes = e.capacite_max - dataPlaces.inscrits;  // une simple soustraction
+
+    const bouton = dejaInscrit
+        ? `<button class="btn btn-secondary btn-sm" disabled>Déjà inscrit ✓</button>`
+        : `<button onclick="sInscrireEvenement(${e.ID})" class="btn btn-primary btn-sm">S'inscrire</button>`;
+
+    const date = new Date(e.date_heure_debut).toLocaleString("fr-FR", {
+        dateStyle: "long", timeStyle: "short"
     });
+
+    const bloc = `
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">${e.titre}</h5>
+            <p class="card-text">${e.description}</p>
+            <p class="card-text text-muted mb-1">📅 ${date}</p>
+            <p class="card-text text-muted mb-1">⏱️ Durée : ${e.duree_minutes} min</p>
+            <p class="card-text text-muted mb-3">👥 ${placesRestantes} places restantes</p>
+            ${bouton}
+        </div>
+    </div>
+    `;
+    div.innerHTML += bloc;
+}
 }
 chargerEvenementsDispo();
 
 async function sInscrireEvenement(id) {
     const token = localStorage.getItem("token");
-    await fetch("/inscriptions", {
+    const reponse = await fetch("/inscriptions", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -328,32 +351,39 @@ async function sInscrireEvenement(id) {
         },
         body: JSON.stringify({ evenement_id: id })
     });
-    alert("Inscription réussie !");
-chargerMonPlanning();
+    if(reponse.ok){
+        alert("Inscription réussie");
+    }else{
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+     chargerMonPlanning();
+     chargerEvenementsDispo();
 }
 
 async function chargerMonPlanning() {
-    const reponse = await fetch("/mes-inscriptions",{
-        headers:{ "Authorization": "Bearer " + localStorage.getItem("token")}
+    const reponse = await fetch("/mes-inscriptions", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     });
-
     const events = await reponse.json();
     const div = document.getElementById("accueil-planning");
     div.innerHTML = "";
 
     if (events.length === 0) {
-        div.innerHTML = `<p class="text-muted">Vous n'êtes inscrit à aucun évènements.</p>`;
+        div.innerHTML = `<p class="text-muted">Vous n'êtes inscrit à aucun évènement.</p>`;
         return;
     }
 
     events.forEach(e => {
+        const date = new Date(e.date_heure_debut).toLocaleString("fr-FR", {
+            dateStyle: "long", timeStyle: "short"
+        });
         const bloc = `
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">${e.titre}</h5>
-                <p class="card-text">${e.date_heure_debut}</p>
-                <p class="card-text">${e.duree_minutes}</p>
-                <p class="card-text">${e.capacite_max}</p>
+                <p class="card-text text-muted mb-1"> ${date}</p>
+                <p class="card-text text-muted mb-0"> ${e.duree_minutes} min ·  ${e.capacite_max} places</p>
             </div>
         </div>
         `;
