@@ -494,3 +494,18 @@ async function chargerAnnoncesPourSelect() {
 }
 chargerAnnoncesPourSelect();
 
+async function traduire (langue){
+    const reponse = await fetch(`/static/${langue}.json`);
+    const textes = await reponse.json();
+
+    document.querySelectorAll("[data-i18n]").forEach(element =>{
+        const cle = element.getAttribute("data-i18n");
+
+        element.textContent = textes [cle];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+        const cle = element.getAttribute("data-i18n-placeholder");
+        element.placeholder = textes[cle];
+    })
+}
+

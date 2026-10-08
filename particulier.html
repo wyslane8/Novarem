@@ -40,91 +40,97 @@
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <button class="nav-link" data-section="accueil">Accueil</button>
+                        <button class="nav-link" data-section="accueil" data-i18n="accueil">Accueil</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="depot">Dépôt</button>
+                        <button class="nav-link" data-section="depot" data-i18n="depot">Dépôt</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="catalogue">Catalogue</button>
+                        <button class="nav-link" data-section="catalogue" data-i18n="catalogue">Catalogue</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="conseil">Conseils</button>
+                        <button class="nav-link" data-section="conseil" data-i18n="conseils">Conseils</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="evenements">Evènements</button>
+                        <button class="nav-link" data-section="evenements" data-i18n="evenements">Evènements</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="profil">Profil</button>
+                        <button class="nav-link" data-section="profil" data-i18n="profil">Profil</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="conteneur">Conteneur</button>
+                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Conteneur</button>
                     </li>
                 </ul>
+                <button class="btn btn-sm btn-outline-dark" onclick="traduire('fr')">FR</button>
+                <button class="btn btn-sm btn-outline-dark" onclick="traduire('en')">EN</button>
+                <button class="btn btn-sm btn-outline-dark" onclick="traduire('es')">ES</button>
                 <button class="btn btn-outline-secondary ms-auto" id="btn-logout">Déconnexion</button>
             </div>
         </div>
     </nav>
 
     <main class="container mt-4">
+
         <section id="section-accueil">
             <h1>Bonjour <span id="accueil-nom"></span></h1>
             <div class="card mt-3" style="max-width:300px">
                 <div class="card-body text-center">
-                    <h5 class="card-title">Mon Score</h5>
+                    <h5 class="card-title" data-i18n="monScore">Mon Score</h5>
                     <p class="display-4" id="score-valeur">0</p>
-                    <p class="text-muted">points</p>
+                    <p class="text-muted" data-i18n="points">points</p>
                 </div>
             </div>
             <div class="progress mt-3" style="max-width:300px">
                 <div class="progress-bar" id="score-barre" role="progressbar" style="width: 0%"></div>
             </div>
-            <h2 class="mt-4">Mes derniers dépôts</h2>
+            <h2 class="mt-4" data-i18n="mesDepots">Mes derniers dépôts</h2>
             <div id="accueil-depots"></div>
-            <h2 class="mt-4">Mon planning</h2>
+            <h2 class="mt-4" data-i18n="monPlanning">Mon planning</h2>
             <div id="accueil-planning"></div>
         </section>
 
+
         <section id="section-conteneur" class="d-none">
-            <h1>Conteneur</h1>
+            <h1 data-i18n="conteneurTitre">Conteneur</h1>
             <div id="liste-conteneur"></div>
 
-            <h2 class="mt-4">Demander un dépôt en conteneur</h2>
+            <h2 class="mt-4" data-i18n="demanderDepot">Demander un dépôt en conteneur</h2>
             <form id="form-conteneur">
                 <div class="mb-2">
                     <select id="conteneur-annonce" class="form-control" required>
 
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Envoyer la demande</button>
+                <button type="submit" class="btn btn-primary" data-i18n="envoyerDemande">Envoyer la demande</button>
             </form>
-            
+
         </section>
 
         <section id="section-depot" class="d-none">
-            <h1>Mes dépôts</h1>
+            <h1 data-i18n="mesDepotsTitre">Mes dépôts</h1>
 
             <table class="table table-striped mt-3">
                 <thead>
                     <tr>
-                        <th>Titre</th>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Prix</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
+                        <th data-i18n="colTitre">Titre</th>
+                        <th data-i18n="colDescription">Description</th>
+                        <th data-i18n="colType">Type</th>
+                        <th data-i18n="colPrix">Prix</th>
+                        <th data-i18n="colStatut">Statut</th>
+                        <th data-i18n="colActions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="tableau-depots"></tbody>
             </table>
 
-            <h2 class="mt-4">Déposer un objet</h2>
+            <h2 class="mt-4" data-i18n="deposerObjet">Déposer un objet</h2>
             <form id="form-depot">
                 <div class="mb-2">
-                    <input type="text" id="depot-titre" placeholder="Titre" class="form-control" required>
+                    <input type="text" id="depot-titre" data-i18n-placeholder="phTitre" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="text" id="depot-description" placeholder="Description" class="form-control" required>
+                    <input type="text" id="depot-description" data-i18n-placeholder="phDescription" class="form-control"
+                        required>
                 </div>
                 <div class="mb-2">
                     <select id="depot-type" class="form-control">
@@ -135,46 +141,51 @@
                     </select>
                 </div>
                 <div class="mb-2">
-                    <input type="number" id="depot-prix" placeholder="Prix de vente" class="form-control" step="0.01"
+                    <input type="number" id="depot-prix" data-i18n-placeholder="phPrix" class="form-control" step="0.01"
                         min="0" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Déposer</button>
             </form>
         </section>
 
+
         <section id="section-catalogue" class="d-none">
-            <h1>Catalogue</h1>
-            <input type="text" id="recherche-catalogue" placeholder="Rechercher...">
+            <h1 data-i18n="catalogueTitre">Catalogue</h1>
+            <input type="text" id="recherche-catalogue" data-i18n-placeholder="phRecherche" placeholder="Rechercher...">
             <select id="filtre-categorie">
-                <option value="">Toutes les catégories</option>
-                <option value="Mobilier">Mobilier</option>
-                <option value="Vêtements">Vêtements</option>
-                <option value="Électronique">Électronique</option>
-                <option value="Décoration">Décoration</option>
+                <option value="" data-i18n="toutesCategories">Toutes les catégories</option>
+                <option value="Mobilier" data-i18n="catMobilier">Mobilier</option>
+                <option value="Vêtements" data-i18n="catVetements">Vêtements</option>
+                <option value="Électronique" data-i18n="catElectronique">Électronique</option>
+                <option value="Décoration" data-i18n="catDecoration">Décoration</option>
             </select>
             <table class="table table-striped mt-3">
                 <thead>
                     <tr>
-                        <th>Titre</th>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Prix</th>
+                        <th data-i18n="colTitre">Titre</th>
+                        <th data-i18n="colDescription">Description</th>
+                        <th data-i18n="colType">Type</th>
+                        <th data-i18n="colPrix">Prix</th>
                     </tr>
                 </thead>
                 <tbody id="tableau-catalogue"></tbody>
             </table>
 
         </section>
+
+
         <section id="section-conseil" class="d-none">
-            <h1>Conseils</h1>
+            <h1 data-i18n="conseilsTitre">Conseils</h1>
             <div id="liste-conseils"></div>
         </section>
+
         <section id="section-evenements" class="d-none">
-            <h1>Événements</h1>
+            <h1 data-i18n="evenementsTitre">Événements</h1>
             <div id="liste-evenements-dispo"></div>
         </section>
+
         <section id="section-profil" class="d-none">
-            <h1>Mon profil</h1>
+            <h1 data-i18n="monProfil">Mon profil</h1>
 
             <div class="card mb-4" style="max-width:500px">
                 <div class="card-body">
@@ -185,26 +196,28 @@
                         </div>
                     </div>
                     <hr>
-                    <p class="mb-1"><strong>Email :</strong> <span id="profil-affiche-email"></span></p>
-                    <p class="mb-0"><strong>Membre depuis :</strong> <span id="profil-affiche-date"></span></p>
+                    <p class="mb-1"><strong data-i18n="labelEmail">Email :</strong> <span
+                            id="profil-affiche-email"></span></p>
+                    <p class="mb-0"><strong data-i18n="labelMembre">Membre depuis :</strong> <span
+                            id="profil-affiche-date"></span></p>
                 </div>
             </div>
 
-            <h2>Modifier mes informations</h2>
+            <h2 data-i18n="modifierInfos">Modifier mes informations</h2>
 
             <form id="form-profil">
                 <!--margin bottom -->
                 <div class="mb-2">
                     <!-- placeholder texte gris qui s'affcihe dans le champs vide != de label-->
-                    <input type="text" id="profil-nom" placeholder="Nom" class="form-control" required>
+                    <input type="text" id="profil-nom" data-i18n-placeholder="phNom" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="email" id="profil-email" placeholder="Email" class="form-control" required>
+                    <input type="email" id="profil-email" data-i18n-placeholder="phEmail" class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="password" id="profil-mdp" placeholder="Nouveau mot de passe" class="form-control">
+                    <input type="password" id="profil-mdp" data-i18n-placeholder="phNouveauMdp" class="form-control">
                 </div>
-                <button type="submit" class="btn btn-primary">Enregister</button>
+                <button type="submit" class="btn btn-primary" data-i18n="enregistrer">Enregister</button>
             </form>
         </section>
 
