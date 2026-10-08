@@ -94,11 +94,14 @@ document.getElementById("form-login").addEventListener("submit", async function 
         localStorage.setItem("role", data.role);
 
         if (data.role === "particulier") {
-            window.location.href = "/static/particulier.html"
+            window.location.href = "/static/particulier.html";
+        } else {
+            window.location.reload();
         }
     } else {
-        window.location.reload();
-        }
+        document.getElementById("login-statut").textContent = "id correctes"
+    }
+
 });
 
 let idEnModification = null;
@@ -164,8 +167,8 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
     if (idCatEnModification === null) {
         await fetch("/categoriePresta", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json" ,
+            headers: {
+                "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("token")
             },
             body: JSON.stringify(nouvelCat)
@@ -251,8 +254,8 @@ document.getElementById("form-prestation").addEventListener("submit", async func
     if (idPrestaEnModification === null) {
         await fetch("/prestations", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json" ,
+            headers: {
+                "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("token")
             },
             body: JSON.stringify(nouvelPresta)

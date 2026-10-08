@@ -370,7 +370,7 @@ async function chargerMonPlanning() {
     div.innerHTML = "";
 
     if (events.length === 0) {
-        div.innerHTML = `<p class="text-muted">Vous n'êtes inscrit à aucun évènement.</p>`;
+        div.innerHTML = `<p class="text-muted">vous n'êtes inscrit à aucun évènement</p>`;
         return;
     }
 
@@ -391,3 +391,106 @@ async function chargerMonPlanning() {
     });
 }
 chargerMonPlanning();
+
+
+async function chargerConteneur() {
+    //envoi uen requete GET a l'API grâce a "fetch"
+    const reponse = await fetch("/depotmesconteneurs", {
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("token")}
+    });
+    //transforme la reponse en objet js
+    const conteneur = await reponse.json()
+    const div = document.getElementById("liste-conteneur");
+    if (conteneur.length === 0) {
+        div.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Aucun depot de conteneur pour l'instant</td></tr>`;
+        return
+    } 
+    conteneur.forEach(c => {
+        // les codes + le bouton PDF n'apparaissent QUE si le dépôt est validé
+        let codes = "";
+        if (c.statut === "VALIDE") {
+            codes = `
+                <p class="card-text">🔑 Code d'ouverture : ${c.code_ouverture}</p>
+                <p class="card-text">📦 Code-barres : ${c.code_barres}</p>
+                <button onclick="telechargerPDF(${c.ID})" class="btn btn-primary btn-sm">Télécharger le justificatif</button>
+            `;
+        }
+
+        const bloc = `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${c.titre}</h5>
+                <p class="card-text">${c.description}</p>
+                <p class="card-text">Statut : ${c.statut}</p>
+                ${codes}
+                <button onclick="supprimerDepotsConteneur(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+            </div>
+        </div>
+        `;
+        div.innerHTML += bloc;
+    });
+    
+}
+chargerConteneur();
+
+document.getElementById("form-conteneur").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouveuConteneur = {
+        annonce_id: parseInt(document.getElementById("conteneur-annonce").value)
+    };
+    await fetch("/depotconteneurs", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify(nouveuConteneur)
+    });
+
+
+    document.getElementById("form-conteneur").reset();
+
+    chargerConteneur();
+
+});
+
+async function telechargerPDF(id) {
+    const token = localStorage.getItem("token");
+    const reponse = await fetch(`/conteneur/${id}/pdf`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const blob = await reponse.blob();
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = "justificatif.pdf";
+
+    lien.click();
+}
+
+async function supprimerDepotsConteneur(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/depotconteneurs/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    chargerConteneur();
+}
+
+async function chargerAnnoncesPourSelect() {
+    const reponse = await fetch("/mesannonces", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    const annonces = await reponse.json();
+    const annoncesValidees = annonces.filter( a => a.statut === "VALIDE")
+    const select = document.getElementById("conteneur-annonce");
+    select.innerHTML = "";
+
+    annoncesValidees.forEach(a => {
+        const option = `<option value="${a.ID}">${a.titre}</option>`;
+        select.innerHTML += option;
+    })
+}
+chargerAnnoncesPourSelect();
+

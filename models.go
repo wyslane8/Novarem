@@ -62,10 +62,11 @@ type Inscription struct {
 
 type DepotConteneur struct {
 	gorm.Model
-	Titre         string  `json:"titre"`
-	Description   string  `json:"description"`
-	Statut        string  `json:"statut"`
-	CodeOuverture string  `json:"code_ouverture"`
+	Titre         string `json:"titre"`
+	Description   string `json:"description"`
+	Statut        string `json:"statut"`
+	CodeOuverture string `json:"code_ouverture"`
 	CodeBarres    string `json:"code_barres"`
-	UtilisateurID uint    `json:"utilisateur_id"`
+	UtilisateurID uint   `json:"utilisateur_id"`
+	AnnonceID     uint   `json:"annonce_id"`
 }

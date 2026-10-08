@@ -8,12 +8,14 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"math/rand"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jung-kurt/gofpdf"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"math/rand"
 )
 
 // variable globale qui va contenir la connexion à la base
@@ -94,6 +96,8 @@ func main() {
 	r.POST("/depotconteneurs", authConnecte(), creerConteneur)
 	r.PUT("/depotconteneurs/:id", authAdmin(), modifierConteneur)
 	r.DELETE("/depotconteneurs/:id", authConnecte(), supprimerConteneur)
+
+	r.GET("/conteneur/:id/pdf", authConnecte(),genererPDFConteneur)
 
 	r.Run(":8080")
 }
@@ -637,6 +641,14 @@ func creerConteneur(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	nouvel.UtilisateurID = uint(userID.(float64))
 	nouvel.Statut = "EN_ATTENTE"
+	var annonce Annonce
+	if err := db.First(&annonce, nouvel.AnnonceID).Error; err != nil{
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "annonce introuvable"})
+		return
+	}
+	nouvel.Titre = annonce.Titre
+	nouvel.Description = annonce.Description
+	
 	if err := db.Create(&nouvel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
 		return
@@ -659,7 +671,6 @@ func modifierConteneur(c *gin.Context) {
 	c.JSON(http.StatusOK, conteneur)
 }
 
-
 func supprimerConteneur(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	role, _ := c.Get("role")
@@ -681,4 +692,34 @@ func supprimerConteneur(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "conteneur supprimée"})
+}
+
+func genererPDFConteneur(c *gin.Context) {
+	id := c.Param("id")
+	var conteneur DepotConteneur
+	if err := db.First(&conteneur, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "Conteneur introuvables"})
+		return
+	}
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(40, 10, "Justificatif de depot - UpcycleConnect")
+	pdf.Ln(20) // saut de ligne
+
+	pdf.SetFont("Arial", "", 12)
+	pdf.Cell(40, 10, "Titre : "+conteneur.Titre)
+	pdf.Ln(10)
+	pdf.Cell(40, 10, "Description : "+conteneur.Description)
+	pdf.Ln(10)
+	pdf.Cell(40, 10, "Statut : "+conteneur.Statut)
+	pdf.Ln(10)
+	pdf.Cell(40, 10, "Code d'ouverture : "+conteneur.CodeOuverture)
+	pdf.Ln(10)
+	pdf.Cell(40, 10, "Code-barres : "+conteneur.CodeBarres)
+
+	c.Header("Content-Type", "application/pdf")
+	pdf.Output(c.Writer)
+
 }
