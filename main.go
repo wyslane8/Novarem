@@ -113,13 +113,13 @@ func getUtilisateurs(c *gin.Context) {
 
 func creerUtilisateur(c *gin.Context) {
 	var nouvel Utilisateur
-	//prend le JSOn envoyé par le front et le transofme en struct Utilisateurs , gerer les erreur erreur 400
+	//prend le JSOn envoyé par le front et le transofme en struct Utilisateurs 
 	if err := c.ShouldBindJSON(&nouvel); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrects"})
 		return
 	}
 
-	//transorme le mdp en clair en un hash illisible
+	//transorme le mdp  en hash 
 	hash, err := bcrypt.GenerateFromPassword([]byte(nouvel.MotDePasse), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
@@ -648,7 +648,7 @@ func creerConteneur(c *gin.Context) {
 	}
 	nouvel.Titre = annonce.Titre
 	nouvel.Description = annonce.Description
-	
+
 	if err := db.Create(&nouvel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
 		return

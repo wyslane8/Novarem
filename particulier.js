@@ -329,9 +329,9 @@ async function chargerEvenementsDispo() {
         <div class="card-body">
             <h5 class="card-title">${e.titre}</h5>
             <p class="card-text">${e.description}</p>
-            <p class="card-text text-muted mb-1">📅 ${date}</p>
-            <p class="card-text text-muted mb-1">⏱️ Durée : ${e.duree_minutes} min</p>
-            <p class="card-text text-muted mb-3">👥 ${placesRestantes} places restantes</p>
+            <p class="card-text text-muted mb-1"> ${date}</p>
+            <p class="card-text text-muted mb-1"> Durée : ${e.duree_minutes} min</p>
+            <p class="card-text text-muted mb-3"> ${placesRestantes} places restantes</p>
             ${bouton}
         </div>
     </div>
@@ -410,8 +410,8 @@ async function chargerConteneur() {
         let codes = "";
         if (c.statut === "VALIDE") {
             codes = `
-                <p class="card-text">🔑 Code d'ouverture : ${c.code_ouverture}</p>
-                <p class="card-text">📦 Code-barres : ${c.code_barres}</p>
+                <p class="card-text">Code d'ouverture : ${c.code_ouverture}</p>
+                <p class="card-text">Code-barres : ${c.code_barres}</p>
                 <button onclick="telechargerPDF(${c.ID})" class="btn btn-primary btn-sm">Télécharger le justificatif</button>
             `;
         }
