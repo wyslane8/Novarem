@@ -47,8 +47,8 @@ func main() {
 	r := gin.Default()
 
 	//dis a gin tous les fichiers du dossier courant ./ sont accessible via static donc ça permet a index de charger app via script . L'autre c'est lorsque quon va a la racine du site / on tombe sur index.html
-	r.Static("/static", "./")
-	r.StaticFile("/", "./index.html")
+	r.Static("/static", "./static")
+	r.StaticFile("/", "./static/index.html")
 
 	//quand qn appelles /utilisateurs on execute la fonction getUtilisateurs qui recupere tous les user de la base (db.find) et les renvoie avce un code 200 (http.StatusOK)
 	r.GET("/utilisateurs", authAdmin(), getUtilisateurs)
@@ -97,7 +97,7 @@ func main() {
 	r.PUT("/depotconteneurs/:id", authAdmin(), modifierConteneur)
 	r.DELETE("/depotconteneurs/:id", authConnecte(), supprimerConteneur)
 
-	r.GET("/conteneur/:id/pdf", authConnecte(),genererPDFConteneur)
+	r.GET("/conteneur/:id/pdf", authConnecte(), genererPDFConteneur)
 
 	r.Run(":8080")
 }
@@ -113,13 +113,13 @@ func getUtilisateurs(c *gin.Context) {
 
 func creerUtilisateur(c *gin.Context) {
 	var nouvel Utilisateur
-	//prend le JSOn envoyé par le front et le transofme en struct Utilisateurs 
+	//prend le JSOn envoyé par le front et le transofme en struct Utilisateurs
 	if err := c.ShouldBindJSON(&nouvel); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrects"})
 		return
 	}
 
-	//transorme le mdp  en hash 
+	//transorme le mdp  en hash
 	hash, err := bcrypt.GenerateFromPassword([]byte(nouvel.MotDePasse), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
@@ -642,7 +642,7 @@ func creerConteneur(c *gin.Context) {
 	nouvel.UtilisateurID = uint(userID.(float64))
 	nouvel.Statut = "EN_ATTENTE"
 	var annonce Annonce
-	if err := db.First(&annonce, nouvel.AnnonceID).Error; err != nil{
+	if err := db.First(&annonce, nouvel.AnnonceID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"erreur": "annonce introuvable"})
 		return
 	}

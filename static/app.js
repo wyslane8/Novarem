@@ -1,3 +1,9 @@
+
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role")
+if (!token || role !== "admin") {
+    window.location.href = "/";
+}
 //fonction qui attend une reponse du serveur avant de continuer 
 async function chargerUtilisateurs() {
     //envoi uen requete GET a l'API grâce a "fetch"
@@ -73,36 +79,7 @@ async function supprimerUtilisateur(id) {
     chargerUtilisateurs();
 }
 
-document.getElementById("form-login").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const identifiants = {
-        email: document.getElementById("login-email").value,
-        mot_de_passe: document.getElementById("login-mdp").value
-    };
 
-    const reponse = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(identifiants)
-    });
-
-    const data = await reponse.json();
-    //vaut true si le code est etre 200 et 299
-    if (reponse.ok) {
-        //sauveragrde le token reçu
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.role);
-
-        if (data.role === "particulier") {
-            window.location.href = "/static/particulier.html";
-        } else {
-            window.location.reload();
-        }
-    } else {
-        document.getElementById("login-statut").textContent = "id correctes"
-    }
-
-});
 
 let idEnModification = null;
 
@@ -492,3 +469,59 @@ async function supprimerConseil(id) {
     chargerConseils();
 }
 
+async function traduire (langue){
+    const reponse = await fetch(`/static/${langue}.json`);
+    const textes = await reponse.json();
+
+    document.querySelectorAll("[data-i18n]").forEach(element =>{
+        const cle = element.getAttribute("data-i18n");
+
+        element.textContent = textes [cle];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+        const cle = element.getAttribute("data-i18n-placeholder");
+        element.placeholder = textes[cle];
+    })
+}
+
+// --- GESTION DE LA NAVIGATION ENTRE LES SECTIONS ---
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".navbar-nav .nav-link[data-section]");
+    const sections = document.querySelectorAll("section[id^='section-']");
+
+    // Fonction pour afficher uniquement la section correspondante
+    function showSection(sectionName) {
+        sections.forEach(section => {
+            if (section.id === "section-" + sectionName) {
+                section.style.display = "block";
+            } else {
+                section.style.display = "none";
+            }
+        });
+    }
+
+    // Afficher la première section par défaut au chargement de la page
+    if (sections.length > 0) {
+        sections.forEach((section, index) => {
+            section.style.display = index === 0 ? "block" : "none";
+        });
+    }
+
+    // Écouter les clics sur chaque bouton du menu
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+            const sectionName = button.getAttribute("data-section");
+            showSection(sectionName);
+        });
+    });
+});
+
+// --- GESTION DE LA DÉCONNEXION ---
+const btnLogout = document.getElementById("btn-logout");
+if (btnLogout) {
+    btnLogout.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        window.location.href = "/"; // Redirige vers la page d'accueil/connexion
+    });
+}

@@ -1,3 +1,6 @@
 variables.env
-novarem.db
-.DS_STORE
+*.db
+venv/
+/novarem-api
+venv/
+vendor/
