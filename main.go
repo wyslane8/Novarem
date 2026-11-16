@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -22,8 +24,11 @@ import (
 var db *gorm.DB
 
 func main() {
-	godotenv.Load()
+	godotenv.Load("variables.env")
 	cleSecrete = []byte(os.Getenv("JWT_SECRET"))
+	if len(cleSecrete) < 16 {
+		log.Fatal("JWT_SECRET manquant ou trop court")
+	}
 	var err error
 	//gorm.Open... = ouvre ou crée un fichier novarem.db qui sera la BDD, gestion des erreurs
 	db, err = gorm.Open(sqlite.Open("novarem.db"), &gorm.Config{})
@@ -43,19 +48,21 @@ func main() {
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
-	//créer le serveur Gin
+	//créer le serveur Gin:
 	r := gin.Default()
 
 	//dis a gin tous les fichiers du dossier courant ./ sont accessible via static donc ça permet a index de charger app via script . L'autre c'est lorsque quon va a la racine du site / on tombe sur index.html
 	r.Static("/static", "./static")
 	r.StaticFile("/", "./static/index.html")
 
-	//quand qn appelles /utilisateurs on execute la fonction getUtilisateurs qui recupere tous les user de la base (db.find) et les renvoie avce un code 200 (http.StatusOK)
+	//quand q
+
 	r.GET("/utilisateurs", authAdmin(), getUtilisateurs)
-	r.POST("/utilisateurs", creerUtilisateur)
+	r.POST("/utilisateurs", authAdmin(), creerUtilisateur)
 	r.PUT("/utilisateurs/:id", authAdmin(), modifierUtilisateur)
 	r.DELETE("/utilisateurs/:id", authAdmin(), supprimerUtilisateur)
 	r.POST("/login", login)
+	r.POST("/register", register)
 
 	r.GET("/categoriePresta", getCategories)
 	r.POST("/categoriePresta", authAdmin(), creerCategorie)
@@ -73,7 +80,8 @@ func main() {
 	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
 	r.GET("/evenements/:id/places", getPlacesEvenement)
 
-	r.GET("/annonces", getAnnonce)
+	r.GET("/catalogue", getCatalogue)
+	r.GET("/annonces", authAdmin(), getAnnonce)
 	r.GET("/mesannonces", authConnecte(), getMesAnnonces)
 	r.POST("/annonces", authConnecte(), creerAnnonce)
 	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
@@ -81,7 +89,6 @@ func main() {
 
 	r.GET("/profil", authConnecte(), getProfile)
 	r.PUT("/profil", authConnecte(), modifierProfil)
-
 	r.GET("/score", authConnecte(), getScore)
 
 	r.GET("/conseils", getConseils)
@@ -91,7 +98,7 @@ func main() {
 	r.POST("/inscriptions", authConnecte(), sInscrire)
 	r.GET("/mes-inscriptions", authConnecte(), getMesInscriptions)
 
-	r.GET("/depotconteneurs", getConteneur)
+	r.GET("/depotconteneurs", authAdmin(), getConteneur)
 	r.GET("/depotmesconteneurs", authConnecte(), getmesConteneur)
 	r.POST("/depotconteneurs", authConnecte(), creerConteneur)
 	r.PUT("/depotconteneurs/:id", authAdmin(), modifierConteneur)
@@ -182,6 +189,35 @@ func supprimerUtilisateur(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "utilisateur supprimé"})
 }
 
+type RegisterInput struct {
+	Nom        string `json:"nom"`
+	Email      string `json:"email"`
+	MotDePasse string `json:"mot_de_passe"`
+}
+
+func register(c *gin.Context) {
+	var in RegisterInput
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incoreectes"})
+		return
+	}
+	if in.Nom == "" || in.Email == "" || len(in.MotDePasse) < 8 {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "nom, email et mot de passe requis "})
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.MotDePasse), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
+		return
+	}
+	u := Utilisateur{Nom: in.Nom, Email: in.Email, MotDePasse: string(hash), Role: "particulier"}
+	if err := db.Create(&u).Error; err != nil {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "cet email est déjà utilisé"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "compte créé"})
+}
+
 // clé du serveur , utilisée pour signer et verifier les token, pour l'instant je l'ai mise ici mais je devrais la mettre dans une variable d'envionnement
 var cleSecrete []byte
 
@@ -213,6 +249,7 @@ func login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   utilisateur.ID,
 		"role": utilisateur.Role,
+		"exp":  time.Now().Add(24 * time.Hour).Unix(),
 	})
 
 	//signe le token avec la clé secrete poru que personne ne puisse le modif/supp
@@ -286,6 +323,19 @@ func authConnecte() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
+		id := claims["id"]
+		var utilisateur Utilisateur
+		if err := db.First(&utilisateur, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"erreur": " utilisateur introuvables"})
+			c.Abort()
+			return
+		}
+
+		if !utilisateur.Actif {
+			c.JSON(http.StatusForbidden, gin.H{"erreur": "compte désactivé"})
+			c.Abort()
+			return
+		}
 
 		c.Set("userID", claims["id"])
 		c.Set("role", claims["role"])
@@ -335,6 +385,12 @@ func supprimerCategorie(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "catégorie supprimée"})
+}
+
+func getCatalogue(c *gin.Context) {
+	var annonces []Annonce
+	db.Where("statut = ?", "VALIDE").Find(&annonces)
+	c.JSON(http.StatusOK, annonces)
 }
 
 func getPrestation(c *gin.Context) {
@@ -445,6 +501,8 @@ func creerAnnonce(c *gin.Context) {
 
 	userID, _ := c.Get("userID")
 	nouvel.UtilisateurID = uint(userID.(float64))
+	nouvel.ID = 0
+	nouvel.Statut = "EN_ATTENTE"
 	if err := db.Create(&nouvel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
 		return
@@ -507,31 +565,49 @@ func getProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, utilisateur)
 }
 
+type ProfilInput struct {
+	Nom        string `json:"nom"`
+	Email      string `json:"email"`
+	MotDePasse string `json:"mot_de_passe"`
+}
+
 func modifierProfil(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var utilisateur Utilisateur
 	if err := db.First(&utilisateur, uint(userID.(float64))).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"erreur": "utilisateur introuvables"})
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "utilisateur introuvable"})
 		return
 	}
-	if err := c.ShouldBindJSON(&utilisateur); err != nil {
+
+	var in ProfilInput
+	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
 		return
 	}
 
-	ancienMotDePasse := utilisateur.MotDePasse
-
-	if utilisateur.MotDePasse == "" {
-		utilisateur.MotDePasse = ancienMotDePasse
-	} else {
-		hash, err := bcrypt.GenerateFromPassword([]byte(utilisateur.MotDePasse), bcrypt.DefaultCost)
+	if in.Nom != "" {
+		utilisateur.Nom = in.Nom
+	}
+	if in.Email != "" {
+		utilisateur.Email = in.Email
+	}
+	if in.MotDePasse != "" {
+		if len(in.MotDePasse) < 8 {
+			c.JSON(http.StatusBadRequest, gin.H{"erreur": "mot de passe trop court"})
+			return
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(in.MotDePasse), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
 			return
 		}
 		utilisateur.MotDePasse = string(hash)
 	}
-	db.Save(&utilisateur)
+
+	if err := db.Save(&utilisateur).Error; err != nil {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "email déjà utilisé"})
+		return
+	}
 	utilisateur.MotDePasse = ""
 	c.JSON(http.StatusOK, utilisateur)
 }
@@ -590,13 +666,24 @@ func sInscrire(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"erreur": "vous êtes déjà inscrit à cet événement"})
 		return
 	}
+	var evenement Evenement
+	if err := db.First(&evenement, inscription.EvenementID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "événement introuvable"})
+		return
+	}
+	var nb int64
+	db.Model(&Inscription{}).Where("evenement_id = ?", inscription.EvenementID).Count(&nb)
+	if int(nb) >= evenement.CapaciteMax {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "événement complet"})
+		return
+	}
+	inscription.ID = 0
 
 	if err := db.Create(&inscription).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "inscription impossible"})
 		return
 	}
 	c.JSON(http.StatusCreated, inscription)
-
 }
 
 func getMesInscriptions(c *gin.Context) {
@@ -634,16 +721,22 @@ func getmesConteneur(c *gin.Context) {
 func creerConteneur(c *gin.Context) {
 	var nouvel DepotConteneur
 	if err := c.ShouldBindJSON(&nouvel); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrectes"})
 		return
 	}
 
 	userID, _ := c.Get("userID")
+	nouvel.ID = 0
 	nouvel.UtilisateurID = uint(userID.(float64))
 	nouvel.Statut = "EN_ATTENTE"
+
 	var annonce Annonce
 	if err := db.First(&annonce, nouvel.AnnonceID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"erreur": "annonce introuvable"})
+		return
+	}
+	if annonce.UtilisateurID != nouvel.UtilisateurID || annonce.Statut != "VALIDE" {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "annonce non valide ou qui ne vous appartient pas"})
 		return
 	}
 	nouvel.Titre = annonce.Titre
@@ -698,7 +791,18 @@ func genererPDFConteneur(c *gin.Context) {
 	id := c.Param("id")
 	var conteneur DepotConteneur
 	if err := db.First(&conteneur, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"erreur": "Conteneur introuvables"})
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "conteneur introuvable"})
+		return
+	}
+
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
+	if role != "admin" && conteneur.UtilisateurID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "accès refusé"})
+		return
+	}
+	if conteneur.Statut != "VALIDE" {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "dépôt non validé"})
 		return
 	}
 
@@ -706,7 +810,7 @@ func genererPDFConteneur(c *gin.Context) {
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 	pdf.Cell(40, 10, "Justificatif de depot - UpcycleConnect")
-	pdf.Ln(20) // saut de ligne
+	pdf.Ln(20)
 
 	pdf.SetFont("Arial", "", 12)
 	pdf.Cell(40, 10, "Titre : "+conteneur.Titre)
@@ -721,5 +825,4 @@ func genererPDFConteneur(c *gin.Context) {
 
 	c.Header("Content-Type", "application/pdf")
 	pdf.Output(c.Writer)
-
 }

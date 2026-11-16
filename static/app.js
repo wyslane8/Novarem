@@ -344,7 +344,9 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
 
 async function chargerDepots() {
     //envoi uen requete GET a l'API grâce a "fetch"
-    const reponse = await fetch("/annonces");
+    const reponse = await fetch("/annonces", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
     //transforme la reponse en objet js
     const depots = await reponse.json()
     //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -469,14 +471,14 @@ async function supprimerConseil(id) {
     chargerConseils();
 }
 
-async function traduire (langue){
+async function traduire(langue) {
     const reponse = await fetch(`/static/${langue}.json`);
     const textes = await reponse.json();
 
-    document.querySelectorAll("[data-i18n]").forEach(element =>{
+    document.querySelectorAll("[data-i18n]").forEach(element => {
         const cle = element.getAttribute("data-i18n");
 
-        element.textContent = textes [cle];
+        element.textContent = textes[cle];
     });
     document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
         const cle = element.getAttribute("data-i18n-placeholder");

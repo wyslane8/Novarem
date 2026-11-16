@@ -143,7 +143,7 @@ document.getElementById("form-profil").addEventListener("submit", async function
 });
 
 async function chargerCatalogue() {
-    const reponse = await fetch("/annonces");
+    const reponse = await fetch("/catalogue");
     tousLesObjets = await reponse.json()
     tousLesObjets = tousLesObjets.filter(c => c.statut === "VALIDE")
     afficherCatalogue(tousLesObjets)

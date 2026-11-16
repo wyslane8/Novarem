@@ -11,6 +11,8 @@ type Utilisateur struct {
 	Email      string `json:"email" gorm:"unique"`
 	MotDePasse string `json:"mot_de_passe"`
 	Role       string `json:"role"`
+	Actif      bool   `json:"actif" gorm:"default:true"` // nv user actif par defaut
+
 }
 
 type CategoriePrestation struct {
