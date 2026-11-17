@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Espace Professionnel - UpcycleConnect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/particulier.css" rel="stylesheet">
+</head>
+
+<body>
+
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">UpcycleConnect | Professionnel</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPro">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menuPro">
+                <div class="navbar-nav me-auto">
+                    <button class="nav-link" data-section="accueil">Accueil</button>
+                    <button class="nav-link" data-section="catalogue">Catalogue</button>
+                    <button class="nav-link" data-section="annonces">Mes annonces</button>
+                    <button class="nav-link" data-section="conteneurs">Mes dépôts</button>
+                </div>
+                <button class="btn btn-outline-secondary" id="btn-logout">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <section id="section-accueil">
+            <h1>Espace professionnel</h1>
+            <p>Bienvenue sur votre espace UpcycleConnect.</p>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h5>Catalogue</h5>
+                        <p>Consultez les annonces disponibles.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h5>Mes annonces</h5>
+                        <p>Gérez vos annonces publiées.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <h5>Mes dépôts</h5>
+                        <p>Suivez vos demandes de dépôt.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-catalogue" class="d-none">
+            <h2>Catalogue des annonces validées</h2>
+            <button class="btn btn-secondary mb-3" id="actualiser-catalogue">Actualiser</button>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Prix</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-catalogue"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-annonces" class="d-none">
+            <h2>Mes annonces</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Prix</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-annonces"></tbody>
+                </table>
+            </div>
+
+            <h3 class="mt-4">Créer une annonce</h3>
+            <form id="form-annonce">
+                <input class="form-control mb-2" id="annonce-titre" placeholder="Titre" required>
+                <textarea class="form-control mb-2" id="annonce-description" placeholder="Description"
+                    required></textarea>
+                <select class="form-control mb-2" id="annonce-type" required>
+                    <option value="Mobilier">Mobilier</option>
+                    <option value="Vêtements">Vêtements</option>
+                    <option value="Électronique">Électronique</option>
+                    <option value="Décoration">Décoration</option>
+                </select>
+                <input class="form-control mb-2" type="number" min="0" step="0.01" id="annonce-prix"
+                    placeholder="Prix (€)" required>
+                <button class="btn btn-primary" type="submit">Publier mon annonce</button>
+            </form>
+            <p id="annonce-message" class="mt-2"></p>
+        </section>
+
+        <section id="section-conteneurs" class="d-none">
+            <h2>Suivi de mes dépôts</h2>
+            <button class="btn btn-secondary mb-3" id="actualiser-conteneurs">Actualiser</button>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Objet</th>
+                            <th>Description</th>
+                            <th>Statut</th>
+                            <th>Code-barres</th>
+                            <th>Code d'ouverture</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-conteneurs"></tbody>
+                </table>
+            </div>
+
+            <h3 class="mt-4">Demander un dépôt</h3>
+            <form id="form-conteneur">
+                <select class="form-control mb-2" id="conteneur-annonce" required>
+                    <option value="">Choisir une annonce validée</option>
+                </select>
+                <button class="btn btn-primary" type="submit">Envoyer la demande</button>
+            </form>
+            <p id="conteneur-message" class="mt-2"></p>
+        </section>
+    </main>
+    
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/professionnel.js"></script></body>
+
+</html>

@@ -73,3 +73,33 @@ section {
 .form-control, .form-select {
     border-radius: 8px;
 }
+
+
+/* Amélioration mobile */
+@media (max-width: 576px) {
+    main {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    form {
+        padding: 15px;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 10px;
+    }
+}

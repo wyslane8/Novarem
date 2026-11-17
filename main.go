@@ -75,9 +75,9 @@ func main() {
 	r.DELETE("/prestations/:id", authAdmin(), supprimerPrestation)
 
 	r.GET("/evenements", getEvenement)
-	r.POST("/evenements", authAdmin(), creerEvenement)
-	r.PUT("/evenements/:id", authAdmin(), modifierEvenement)
-	r.DELETE("/evenements/:id", authAdmin(), supprimerEvenement)
+	r.POST("/evenements", authAdminOuSalarie(), creerEvenement)
+	r.PUT("/evenements/:id", authAdminOuSalarie(), modifierEvenement)
+	r.DELETE("/evenements/:id", authAdminOuSalarie(), supprimerEvenement)
 	r.GET("/evenements/:id/places", getPlacesEvenement)
 
 	r.GET("/catalogue", getCatalogue)
@@ -92,8 +92,8 @@ func main() {
 	r.GET("/score", authConnecte(), getScore)
 
 	r.GET("/conseils", getConseils)
-	r.POST("/conseils", authAdmin(), creerConseil)
-	r.DELETE("/conseils/:id", authAdmin(), supprimerConseil)
+	r.POST("/conseils", authAdminOuSalarie(), creerConseil)
+	r.DELETE("/conseils/:id", authAdminOuSalarie(), supprimerConseil)
 
 	r.POST("/inscriptions", authConnecte(), sInscrire)
 	r.GET("/mes-inscriptions", authConnecte(), getMesInscriptions)
@@ -291,6 +291,42 @@ func authAdmin() gin.HandlerFunc {
 		//meme si le token est valide on veirfie que le token appartient bien à l'admin
 		if claims["role"] != "admin" {
 			c.JSON(http.StatusForbidden, gin.H{"erreur": "accès réservé aux admins"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func authAdminOuSalarie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token manquant"})
+			c.Abort()
+			return
+		}
+
+		// Enlève le mot Bearer pour garder uniquement le token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			return cleSecrete, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token invalide"})
+			c.Abort()
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+
+		// Vérifie que l'utilisateur est admin ou salarié
+		if claims["role"] != "admin" && claims["role"] != "salarie" {
+			c.JSON(http.StatusForbidden, gin.H{"erreur": "accès réservé au personnel"})
 			c.Abort()
 			return
 		}
