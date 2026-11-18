@@ -106,33 +106,39 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
 });
 
 
-// ---------------- GESTION DES CONSEILS ----------------
+// GESTION DES CONSEILS 
 
-// Afficher les conseils
+let tousLesConseils = [];
+let idConseilEnModification = null;
+
 async function chargerConseils() {
     const reponse = await fetch("/conseils");
-    const conseils = await reponse.json();
+    tousLesConseils = await reponse.json();
 
     const tbody = document.getElementById("tableau-conseils");
     tbody.innerHTML = "";
 
-    conseils.forEach(c => {
-        const ligne = `
+    tousLesConseils.forEach(c => {
+        tbody.innerHTML += `
         <tr>
             <td>${c.ID}</td>
             <td>${c.titre}</td>
             <td>${c.contenu}</td>
             <td>
+                <button onclick="preparerModificationConseil(${c.ID})" class="btn btn-warning btn-sm">Modifier</button>
                 <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
             </td>
-        </tr>
-        `;
-
-        tbody.innerHTML += ligne;
+        </tr>`;
     });
 }
-
 chargerConseils();
+
+function preparerModificationConseil(id) {
+    const conseil = tousLesConseils.find(c => c.ID === id);
+    idConseilEnModification = id;
+    document.getElementById("conseil-titre").value = conseil.titre;
+    document.getElementById("conseil-contenu").value = conseil.contenu;
+}
 
 
 // Ajouter un conseil
@@ -143,15 +149,27 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
         titre: document.getElementById("conseil-titre").value,
         contenu: document.getElementById("conseil-contenu").value
     };
-
-    await fetch("/conseils", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify(nouveauConseil)
-    });
+    let reponse;
+    if (idConseilEnModification === null) {
+        reponse = await fetch("/conseils", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouveauConseil)
+        });
+    } else {
+        reponse = await fetch(`/conseils/${idConseilEnModification}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouveauConseil)
+        });
+        idConseilEnModification = null;
+    }
 
     document.getElementById("form-conseil").reset();
     chargerConseils();

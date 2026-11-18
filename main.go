@@ -12,12 +12,17 @@ import (
 
 	"math/rand"
 
+	"image/png"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jung-kurt/gofpdf"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/code128"
 )
 
 // variable globale qui va contenir la connexion à la base
@@ -45,6 +50,7 @@ func main() {
 	db.AutoMigrate(&Conseil{})
 	db.AutoMigrate(&Inscription{})
 	db.AutoMigrate(&DepotConteneur{})
+	db.AutoMigrate(&DemandeRecuperation{})
 
 	fmt.Println("BDD table Utilisateur créée avec succès")
 
@@ -84,8 +90,9 @@ func main() {
 	r.GET("/annonces", authAdmin(), getAnnonce)
 	r.GET("/mesannonces", authConnecte(), getMesAnnonces)
 	r.POST("/annonces", authConnecte(), creerAnnonce)
-	r.PUT("/annonces/:id", authAdmin(), modifierAnnonce)
+	r.PUT("/annonces/:id", authConnecte(), modifierAnnonce)
 	r.DELETE("/annonces/:id", authConnecte(), supprimerAnnonce)
+	r.PUT("/annonces/:id/statut", authAdmin(), changerStatutAnnonces)
 
 	r.GET("/profil", authConnecte(), getProfile)
 	r.PUT("/profil", authConnecte(), modifierProfil)
@@ -94,6 +101,7 @@ func main() {
 	r.GET("/conseils", getConseils)
 	r.POST("/conseils", authAdminOuSalarie(), creerConseil)
 	r.DELETE("/conseils/:id", authAdminOuSalarie(), supprimerConseil)
+	r.POST("/conseils/:id", authAdminOuSalarie(), modifierConseil)
 
 	r.POST("/inscriptions", authConnecte(), sInscrire)
 	r.GET("/mes-inscriptions", authConnecte(), getMesInscriptions)
@@ -103,8 +111,16 @@ func main() {
 	r.POST("/depotconteneurs", authConnecte(), creerConteneur)
 	r.PUT("/depotconteneurs/:id", authAdmin(), modifierConteneur)
 	r.DELETE("/depotconteneurs/:id", authConnecte(), supprimerConteneur)
+	r.GET("/professionnel/conteneurs", authConnecte(), authProfessionnel(), getConteneurARecuperer)
+	r.GET("/mes-demandes-recuperation", authConnecte(), getMesDemandesRecuperation)
+	r.PUT("/demandes-recuperation/:id", authConnecte(), repondreDemandeRecuperation)
 
 	r.GET("/conteneur/:id/pdf", authConnecte(), genererPDFConteneur)
+	r.GET("/conteneur/:id/codebarres", authConnecte(), afficherCodeBarres)
+
+	r.POST("/professionnel/demandes-recuperation", authConnecte(), authProfessionnel(), creerDemandesRecuperation)
+	r.GET("/professionnel/mes-demandes", authConnecte(), authProfessionnel(), getMesDemandesPro)
+	r.PUT("/professionnel/demandes/:id/recuperer", authConnecte(), authProfessionnel(),confirmerRecuperation)
 
 	r.Run(":8080")
 }
@@ -145,6 +161,14 @@ func creerUtilisateur(c *gin.Context) {
 	c.JSON(http.StatusCreated, nouvel)
 }
 
+type ModifierUser struct {
+	Nom        string `json:"nom"`
+	Email      string `json:"email"`
+	MotDePasse string `json:"mot_de_passe"`
+	Role       string `json:"role"`
+	Actif      bool   `json:"actif"`
+}
+
 func modifierUtilisateur(c *gin.Context) {
 	//recupere l'id present dans l'URL
 	id := c.Param("id")
@@ -157,24 +181,34 @@ func modifierUtilisateur(c *gin.Context) {
 	}
 	ancienMotDePAsse := utilisateur.MotDePasse
 
-	if err := c.ShouldBindJSON(&utilisateur); err != nil {
+	var input ModifierUser
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données incorrectes"})
 		return
 	}
 
-	if utilisateur.MotDePasse == "" {
-		utilisateur.MotDePasse = ancienMotDePAsse
+	if input.MotDePasse == "" {
+		input.MotDePasse = ancienMotDePAsse
 	} else {
-		hash, err := bcrypt.GenerateFromPassword([]byte(utilisateur.MotDePasse), bcrypt.DefaultCost)
+		hash, err := bcrypt.GenerateFromPassword([]byte(input.MotDePasse), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hachage"})
 			return
 		}
-		utilisateur.MotDePasse = string(hash)
+		input.MotDePasse = string(hash)
 	}
 
 	//ici on chareg d'abord l'utilisateur existsnat et apres on applique les nouvelles donned grace shouldbindjson
-	db.Save(&utilisateur)
+	utilisateur.Nom = input.Nom
+	utilisateur.Email = input.Email
+	utilisateur.Role = input.Role
+	utilisateur.Actif = input.Actif
+	utilisateur.MotDePasse = input.MotDePasse
+
+	if err := db.Save(&utilisateur).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de modification"})
+		return
+	}
 	utilisateur.MotDePasse = ""
 	c.JSON(http.StatusOK, utilisateur)
 }
@@ -245,6 +279,11 @@ func login(c *gin.Context) {
 		return
 	}
 
+	if !utilisateur.Actif {
+		c.JSON(http.StatusUnauthorized, gin.H{"erreur": "compte désactivé"})
+		return
+	}
+
 	//creer un token contenant l'id, le role du user
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   utilisateur.ID,
@@ -279,8 +318,12 @@ func authAdmin() gin.HandlerFunc {
 
 		//verification du token par rapport à la clé
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			if t.Method != jwt.SigningMethodHS256 {
+				return nil, fmt.Errorf("signature invalide (algo)")
+			}
 			return cleSecrete, nil
 		})
+
 		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token invalide"})
 			c.Abort()
@@ -288,8 +331,21 @@ func authAdmin() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
+		id := claims["id"]
+		var utilisateur Utilisateur
+		if err := db.First(&utilisateur, id).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "utilisateur introuvable"})
+			c.Abort()
+			return
+		}
+		if !utilisateur.Actif {
+			c.JSON(http.StatusForbidden, gin.H{"erreur": "compte désactivé"})
+			c.Abort()
+			return
+		}
+
 		//meme si le token est valide on veirfie que le token appartient bien à l'admin
-		if claims["role"] != "admin" {
+		if utilisateur.Role != "admin" {
 			c.JSON(http.StatusForbidden, gin.H{"erreur": "accès réservé aux admins"})
 			c.Abort()
 			return
@@ -313,6 +369,9 @@ func authAdminOuSalarie() gin.HandlerFunc {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			if t.Method != jwt.SigningMethodHS256 {
+				return nil, fmt.Errorf("signature invalide (algo)")
+			}
 			return cleSecrete, nil
 		})
 
@@ -323,9 +382,20 @@ func authAdminOuSalarie() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-
+		id := claims["id"]
+		var utilisateur Utilisateur
+		if err := db.First(&utilisateur, id).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "user introuvable"})
+			c.Abort()
+			return
+		}
+		if !utilisateur.Actif {
+			c.JSON(http.StatusForbidden, gin.H{"erreur": "compte désactivé"})
+			c.Abort()
+			return
+		}
 		// Vérifie que l'utilisateur est admin ou salarié
-		if claims["role"] != "admin" && claims["role"] != "salarie" {
+		if utilisateur.Role != "admin" && utilisateur.Role != "salarie" {
 			c.JSON(http.StatusForbidden, gin.H{"erreur": "accès réservé au personnel"})
 			c.Abort()
 			return
@@ -350,8 +420,12 @@ func authConnecte() gin.HandlerFunc {
 
 		//verification du token par rapport à la clé
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			if t.Method != jwt.SigningMethodHS256 {
+				return nil, fmt.Errorf("signature invalide (algo)")
+			}
 			return cleSecrete, nil
 		})
+
 		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "token invalide"})
 			c.Abort()
@@ -373,9 +447,20 @@ func authConnecte() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", claims["id"])
-		c.Set("role", claims["role"])
+		c.Set("userID", float64(utilisateur.ID))
+		c.Set("role", utilisateur.Role)
 
+		c.Next()
+	}
+}
+func authProfessionnel() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, existe := c.Get("role")
+		if !existe || role != "professionnel" {
+			c.JSON(http.StatusForbidden, gin.H{"erreur ": "accès réservé aux professionnels"})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }
@@ -537,13 +622,24 @@ func creerAnnonce(c *gin.Context) {
 
 	userID, _ := c.Get("userID")
 	nouvel.UtilisateurID = uint(userID.(float64))
+	nouvel.DatePublication = time.Now().Format("2006-01-02")
 	nouvel.ID = 0
 	nouvel.Statut = "EN_ATTENTE"
 	if err := db.Create(&nouvel).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
 		return
 	}
+
+	fmt.Println("nature enregsitre", nouvel.NatureAnnonce)
 	c.JSON(http.StatusCreated, nouvel)
+}
+
+type ModifierAnnonceInput struct {
+	Titre         string  `json:"titre"`
+	Description   string  `json:"description"`
+	TypeAnnonce   string  `json:"type_annonce"`
+	PrixVente     float64 `json:"prix_vente"`
+	NatureAnnonce string  `json:"nature_annonce"`
 }
 
 func modifierAnnonce(c *gin.Context) {
@@ -553,11 +649,35 @@ func modifierAnnonce(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"erreur": "Annonces introuvables"})
 		return
 	}
-	if err := c.ShouldBindJSON(&annonce); err != nil {
+	var input ModifierAnnonceInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
 		return
 	}
-	db.Save(&annonce)
+
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
+	if role != "admin" && uint(userID.(float64)) != annonce.UtilisateurID {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": " vous ne pouvez pas modifier cette annonce"})
+		return
+	}
+
+	annonce.Description = input.Description
+	annonce.TypeAnnonce = input.TypeAnnonce
+	annonce.PrixVente = input.PrixVente
+	annonce.Titre = input.Titre
+	annonce.PrixVente = input.PrixVente
+	annonce.NatureAnnonce = input.NatureAnnonce
+	annonce.Statut = "EN_ATTENTE"
+
+	if input.NatureAnnonce == "DON" {
+		annonce.PrixVente = 0
+	}
+
+	if err := db.Save(&annonce).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors de la modification"})
+		return
+	}
 	c.JSON(http.StatusOK, annonce)
 }
 
@@ -582,6 +702,37 @@ func supprimerAnnonce(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "annonce supprimée"})
+}
+
+func changerStatutAnnonces(c *gin.Context) {
+	id := c.Param("id")
+
+	var annonce Annonce
+	if err := db.First(&annonce, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "annonces introuvables"})
+		return
+	}
+	var input struct {
+		Statut string `json:"statut"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+
+	if input.Statut != "VALIDE" && input.Statut != "REFUSE" {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "statut invalide"})
+		return
+	}
+
+	annonce.Statut = input.Statut
+
+	if err := db.Save(&annonce).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors du changement de statut"})
+		return
+	}
+	c.JSON(http.StatusOK, annonce)
 }
 
 func getMesAnnonces(c *gin.Context) {
@@ -685,6 +836,32 @@ func supprimerConseil(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "évènements supprimée"})
 }
+func modifierConseil(c *gin.Context) {
+	id := c.Param("id")
+	var conseil Conseil
+	if err := db.First(&conseil, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "conseil introuvable"})
+		return
+	}
+
+	var input struct {
+		Titre   string `json:"titre"`
+		Contenu string `json:"contenu"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+
+	conseil.Titre = input.Titre
+	conseil.Contenu = input.Contenu
+
+	if err := db.Save(&conseil).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors de la modification"})
+		return
+	}
+	c.JSON(http.StatusOK, conseil)
+}
 
 func sInscrire(c *gin.Context) {
 	userID, _ := c.Get("userID")
@@ -787,16 +964,49 @@ func creerConteneur(c *gin.Context) {
 
 func modifierConteneur(c *gin.Context) {
 	id := c.Param("id")
+
 	var conteneur DepotConteneur
 	if err := db.First(&conteneur, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"erreur": "Conteneur introuvables"})
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "Conteneur introuvable"})
 		return
 	}
-	conteneur.Statut = "VALIDE"
-	conteneur.CodeOuverture = fmt.Sprintf("%d", rand.Intn(900000)+100000)
-	conteneur.CodeBarres = fmt.Sprintf("UPC-%d", conteneur.ID)
 
-	db.Save(&conteneur)
+	var input struct {
+		Statut string `json:"statut"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "Données invalides"})
+		return
+	}
+
+	if conteneur.Statut != "EN_ATTENTE" {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "Cette demande a déjà été traitée"})
+		return
+	}
+
+	if input.Statut != "VALIDE" && input.Statut != "REFUSE" {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "Statut invalide"})
+		return
+	}
+
+	conteneur.Statut = input.Statut
+
+	if input.Statut == "VALIDE" {
+		conteneur.CodeOuverture = fmt.Sprintf("%d", rand.Intn(900000)+100000)
+		conteneur.CodeBarres = fmt.Sprintf("CONT-%06d", conteneur.ID)
+	}
+
+	if input.Statut == "REFUSE" {
+		conteneur.CodeOuverture = ""
+		conteneur.CodeBarres = ""
+	}
+
+	if err := db.Save(&conteneur).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "Erreur lors du traitement"})
+		return
+	}
+
 	c.JSON(http.StatusOK, conteneur)
 }
 
@@ -861,4 +1071,223 @@ func genererPDFConteneur(c *gin.Context) {
 
 	c.Header("Content-Type", "application/pdf")
 	pdf.Output(c.Writer)
+}
+
+func getConteneurARecuperer(c *gin.Context) {
+	var depots []DepotConteneur
+	db.Where("statut = ?", "VALIDE").Find(&depots)
+	//on cache le code d'ouverture, le pro le recoit seulement si sa demande est acceptée
+	for i := range depots {
+		depots[i].CodeOuverture = ""
+	}
+	c.JSON(http.StatusOK, depots)
+}
+
+
+func creerDemandesRecuperation(c *gin.Context) {
+	var input struct {
+		ConteneurID uint `json:"conteneur_id"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": " données incorrectes"})
+		return
+	}
+
+	fmt.Println("conteneur reçu :", input.ConteneurID)
+
+	userID, _ := c.Get("userID")
+
+	var conteneur DepotConteneur
+
+	if err := db.First(&conteneur, input.ConteneurID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "conteneur introuvable"})
+		return
+	}
+
+	if conteneur.Statut != "VALIDE" {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "conteneur indisponnible"})
+		return
+	}
+
+	var existante DemandeRecuperation
+	erreur := db.Where("conteneur_id = ? AND professionnel_id = ? AND statut = ? ", conteneur.ID, uint(userID.(float64)), "EN_ATTENTE").First(&existante).Error
+	if erreur == nil {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "vous avez deja une demande en attente"})
+		return
+	}
+
+	demande := DemandeRecuperation{
+		ConteneurID:     conteneur.ID,
+		ProfessionnelID: uint(userID.(float64)),
+		ParticulierID:   conteneur.UtilisateurID,
+		Statut:          "EN_ATTENTE",
+	}
+	if err := db.Create(&demande).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "création impossible"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, demande)
+}
+
+func getMesDemandesRecuperation(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var demandes []DemandeRecuperation
+	db.Where("particulier_id = ?", uint(userID.(float64))).Find(&demandes)
+
+	c.JSON(http.StatusOK, demandes)
+}
+
+func repondreDemandeRecuperation(c *gin.Context) {
+	id := c.Param("id")
+	userID, _ := c.Get("userID")
+
+	var demande DemandeRecuperation
+	if err := db.First(&demande, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "demande introuvable"})
+		return
+	}
+
+	//seul le particulier qui a deposé le conteneur peut repondre
+	if demande.ParticulierID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "cette demande ne vous concerne pas"})
+		return
+	}
+
+	if demande.Statut != "EN_ATTENTE" {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "cette demande a déjà été traitée"})
+		return
+	}
+
+	var input struct {
+		Statut string `json:"statut"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+	if input.Statut != "ACCEPTEE" && input.Statut != "REFUSEE" {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "statut invalide"})
+		return
+	}
+
+	demande.Statut = input.Statut
+	if err := db.Save(&demande).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors du traitement"})
+		return
+	}
+
+	//si on accepte, le conteneur est reservé : il disparait de la liste des pros
+	if input.Statut == "ACCEPTEE" {
+		db.Model(&DepotConteneur{}).Where("id = ?", demande.ConteneurID).Update("statut", "RESERVE")
+	}
+
+	c.JSON(http.StatusOK, demande)
+}
+
+func afficherCodeBarres(c *gin.Context) {
+	id := c.Param("id")
+
+	var conteneur DepotConteneur
+	if err := db.First(&conteneur, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "conteneur introuvable"})
+		return
+	}
+
+	if conteneur.Statut != "VALIDE" {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "conteneur non validé"})
+		return
+	}
+
+	code, err := code128.Encode(conteneur.CodeBarres)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "génération du code-barres impossible"})
+		return
+	}
+
+	codeRedimensionne, err := barcode.Scale(code, 400, 120)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "redimensionnement impossible"})
+		return
+	}
+
+	c.Header("Content-Type", "image/png")
+
+	if err := png.Encode(c.Writer, codeRedimensionne); err != nil {
+		return
+	}
+}
+
+func getMesDemandesPro(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	var demandes []DemandeRecuperation
+	db.Where("professionnel_id = ?", uint(userID.(float64))).Find(&demandes)
+
+	//liste vide et pas nil, sinon le front recoit null
+	resultat := []gin.H{}
+	for _, d := range demandes {
+		var conteneur DepotConteneur
+		db.First(&conteneur, d.ConteneurID)
+
+		//le code d'ouverture est donné seulement si le particulier a accepté
+		code := ""
+		if d.Statut == "ACCEPTEE" {
+			code = conteneur.CodeOuverture
+		}
+
+		resultat = append(resultat, gin.H{
+			"ID":             d.ID,
+			"statut":         d.Statut,
+			"titre":          conteneur.Titre,
+			"code_barres":    conteneur.CodeBarres,
+			"code_ouverture": code,
+		})
+	}
+	c.JSON(http.StatusOK, resultat)
+}
+
+func confirmerRecuperation(c *gin.Context) {
+	id := c.Param("id")
+	userID, _ := c.Get("userID")
+
+	var demande DemandeRecuperation
+	if err := db.First(&demande, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"erreur": "demande introuvable"})
+		return
+	}
+	if demande.ProfessionnelID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"erreur": "cette demande ne vous appartient pas"})
+		return
+	}
+	if demande.Statut != "ACCEPTEE" {
+		c.JSON(http.StatusConflict, gin.H{"erreur": "la demande n'a pas été acceptée"})
+		return
+	}
+
+	var input struct {
+		CodeBarres string `json:"code_barres"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+		return
+	}
+
+	var conteneur DepotConteneur
+	db.First(&conteneur, demande.ConteneurID)
+
+	//on verifie que le code scanné est bien celui de l'objet
+	if input.CodeBarres != conteneur.CodeBarres {
+		c.JSON(http.StatusBadRequest, gin.H{"erreur": "ce code-barres ne correspond pas à l'objet"})
+		return
+	}
+
+	demande.Statut = "TERMINEE"
+	db.Save(&demande)
+	conteneur.Statut = "RECUPERE"
+	db.Save(&conteneur)
+
+	c.JSON(http.StatusOK, demande)
 }

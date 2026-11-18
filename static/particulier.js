@@ -513,6 +513,10 @@ async function chargerConteneur() {
     `;
         } else if (c.statut === "REFUSE") {
             codes = `<p class="text-danger">Votre demande a été refusée.</p>`;
+        } else if (c.statut === "RESERVE"){
+            codes = `<p class="text-danger">Objet déjà réservé.</p>`;
+        } else if (c.statut === "rECUPERE"){
+            codes = `<p class="text-danger">Objet déjà récupéré.</p>`;
         } else {
             codes = `<p class="text-muted">Votre demande est en cours de traitement.</p>`;
         }
@@ -539,6 +543,7 @@ async function chargerConteneur() {
 }
 
 chargerConteneur();
+
 
 async function chargerImageCodeBarres(id) {
     const reponse = await fetch(`/conteneur/${id}/codebarres`, {
@@ -570,6 +575,66 @@ document.getElementById("form-conteneur").addEventListener("submit", async funct
     chargerConteneur();
 
 });
+
+async function chargerDemandesRecuperation() {
+    const reponse = await fetch("/mes-demandes-recuperation", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    const div = document.getElementById("liste-demandes");
+    div.innerHTML = "";
+
+    //si le back a pas encore la route
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    const demandes = await reponse.json();
+    if (demandes.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucune demande pour l'instant.</p>`;
+        return;
+    }
+
+    demandes.forEach(d => {
+        let boutons = "";
+        if (d.statut === "EN_ATTENTE") {
+            boutons = `
+                <button onclick="repondreDemande(${d.ID}, 'ACCEPTEE')" class="btn btn-success btn-sm">Accepter</button>
+                <button onclick="repondreDemande(${d.ID}, 'REFUSEE')" class="btn btn-danger btn-sm">Refuser</button>
+            `;
+        }
+        div.innerHTML += `
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">Conteneur n°${d.conteneur_id}</p>
+                <p class="card-text">Statut : ${d.statut}</p>
+                ${boutons}
+            </div>
+        </div>`;
+    });
+}
+chargerDemandesRecuperation();
+
+async function repondreDemande(id, statut) {
+    const reponse = await fetch(`/demandes-recuperation/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ statut: statut })
+    });
+
+    if (reponse.ok) {
+        alert("Réponse envoyée");
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+    chargerDemandesRecuperation();
+    chargerConteneur();
+}
+
 
 async function telechargerPDF(id) {
     const token = localStorage.getItem("token");

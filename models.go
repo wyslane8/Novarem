@@ -45,6 +45,7 @@ type Annonce struct {
 	Description     string  `json:"description"`
 	DatePublication string  `json:"date_publication"`
 	TypeAnnonce     string  `json:"type_annonce"`
+	NatureAnnonce   string  `json:"nature_annonce"`
 	PrixVente       float64 `json:"prix_vente"`
 	Statut          string  `json:"statut"`
 	UtilisateurID   uint    `json:"utilisateur_id"`
@@ -57,9 +58,9 @@ type Conseil struct {
 }
 
 type Inscription struct {
-	gorm.Model
-	UtilisateurID uint `json:"utilisateur_id"`
-	EvenementID   uint `json:"evenement_id"`
+    gorm.Model
+    UtilisateurID uint `json:"utilisateur_id" gorm:"uniqueIndex:idx_inscription"`
+    EvenementID   uint `json:"evenement_id" gorm:"uniqueIndex:idx_inscription"`
 }
 
 type DepotConteneur struct {
@@ -72,3 +73,14 @@ type DepotConteneur struct {
 	UtilisateurID uint   `json:"utilisateur_id"`
 	AnnonceID     uint   `json:"annonce_id"`
 }
+
+type DemandeRecuperation struct {
+	gorm.Model
+	ConteneurID     uint   `json:"conteneur_id"`
+	ProfessionnelID uint   `json:"professionnel_id"`
+	ParticulierID   uint   `json:"particulier_ID"`
+	Statut          string `json:"statut"`
+	
+}
+
+

@@ -36,6 +36,7 @@ function afficherSection(nom) {
     if (nom === "conteneurs") chargerConteneurs();
     if (nom === "recuperation") chargerRecuperation();
     if (nom === "profil") chargerProfil();
+    if(nom === "mes-recuperations") chargerMesDemandes();
 }
 
 document.getElementById("actualiser-recuperation").addEventListener("click", chargerRecuperation)
@@ -275,3 +276,62 @@ document.getElementById("form-profil").addEventListener("submit", async function
         alert(data.erreur);
     }
 });
+
+async function chargerMesDemandes() {
+    const reponse = await fetch("/professionnel/mes-demandes", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const demandes = await reponse.json();
+    const div = document.getElementById("liste-mes-demandes");
+    div.innerHTML = "";
+
+    if (demandes.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucune demande pour l'instant.</p>`;
+        return;
+    }
+
+    demandes.forEach(d => {
+        let contenu = "";
+        if (d.statut === "ACCEPTEE") {
+            contenu = `
+                <p class="card-text">Code d'ouverture : <strong>${d.code_ouverture}</strong></p>
+                <input type="text" id="scan-${d.ID}" class="form-control mb-2" style="max-width:300px" placeholder="Scanner le code-barres de l'objet">
+                <button onclick="confirmerRecuperation(${d.ID})" class="btn btn-success btn-sm">Confirmer la récupération</button>
+            `;
+        } else if (d.statut === "TERMINEE") {
+            contenu = `<p class="text-success">Objet récupéré ✓</p>`;
+        } else if (d.statut === "REFUSEE") {
+            contenu = `<p class="text-danger">Demande refusée.</p>`;
+        } else {
+            contenu = `<p class="text-muted">En attente de réponse du particulier.</p>`;
+        }
+
+        div.innerHTML += `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${d.titre}</h5>
+                <p class="card-text">Statut : ${d.statut}</p>
+                ${contenu}
+            </div>
+        </div>`;
+    });
+}
+
+async function confirmerRecuperation(id) {
+    const code = document.getElementById("scan-" + id).value;
+    const reponse = await fetch(`/professionnel/demandes/${id}/recuperer`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ code_barres: code })
+    });
+    if (reponse.ok) {
+        alert("Récupération confirmée");
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+    chargerMesDemandes();
+}

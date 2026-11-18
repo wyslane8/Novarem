@@ -478,8 +478,8 @@ async function chargerDepots() {
 
     depots.forEach(d => {
         let boutons = "";
-        if(d.statut === "EN_ATTENTE"){
-             boutons = `
+        if (d.statut === "EN_ATTENTE") {
+            boutons = `
             <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
             <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
         `;
@@ -496,8 +496,10 @@ async function chargerDepots() {
                 <td>${d.utilisateur_id}</td>
 
                 <td>
+                    ${boutons}
                     <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
                 </td>
+
             </tr>
         `;
 
@@ -549,33 +551,39 @@ async function supprimerDepots(id) {
 }
 
 
-
 // GESTION DES CONSEILS
+
+let tousLesConseils = [];
+let idConseilEnModification = null;
 
 async function chargerConseils() {
     const reponse = await fetch("/conseils");
-    const categorie = await reponse.json();
+    tousLesConseils = await reponse.json();
 
     const tbody = document.getElementById("tableau-conseils");
     tbody.innerHTML = "";
 
-    categorie.forEach(c => {
-        const ligne = `
-            <tr>
-                <td>${c.ID}</td>
-                <td>${c.titre}</td>
-                <td>${c.contenu}</td>
-                <td>
-                    <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
-                </td>
-            </tr>
-        `;
-
-        tbody.innerHTML += ligne;
+    tousLesConseils.forEach(c => {
+        tbody.innerHTML += `
+        <tr>
+            <td>${c.ID}</td>
+            <td>${c.titre}</td>
+            <td>${c.contenu}</td>
+            <td>
+                <button onclick="preparerModificationConseil(${c.ID})" class="btn btn-warning btn-sm">Modifier</button>
+                <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+            </td>
+        </tr>`;
     });
 }
-
 chargerConseils();
+
+function preparerModificationConseil(id) {
+    const conseil = tousLesConseils.find(c => c.ID === id);
+    idConseilEnModification = id;
+    document.getElementById("conseil-titre").value = conseil.titre;
+    document.getElementById("conseil-contenu").value = conseil.contenu;
+}
 
 document.getElementById("form-conseil").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -585,92 +593,38 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
         contenu: document.getElementById("conseil-contenu").value
     };
 
-    const token = localStorage.getItem("token");
-
-    await fetch("/conseils", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify(nouveauConseil)
-    });
+    if (idConseilEnModification === null) {
+        await fetch("/conseils", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouveauConseil)
+        });
+    } else {
+        await fetch(`/conseils/${idConseilEnModification}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouveauConseil)
+        });
+        idConseilEnModification = null;
+    }
 
     document.getElementById("form-conseil").reset();
     chargerConseils();
 });
 
 async function supprimerConseil(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/conseils/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerConseils();
 }
-
-
-// GESTION DES TRADUCTIONS
-
-async function traduire(langue) {
-    const reponse = await fetch(`/static/${langue}.json`);
-    const textes = await reponse.json();
-
-    document.querySelectorAll("[data-i18n]").forEach(element => {
-        const cle = element.getAttribute("data-i18n");
-        element.textContent = textes[cle];
-    });
-
-    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
-        const cle = element.getAttribute("data-i18n-placeholder");
-        element.placeholder = textes[cle];
-    });
-}
-
-
-// GESTION DE LA NAVIGATION ENTRE LES SECTIONS
-
-document.addEventListener("DOMContentLoaded", () => {
-    const buttons = document.querySelectorAll(".navbar-nav .nav-link[data-section]");
-    const sections = document.querySelectorAll("section[id^='section-']");
-
-    function showSection(sectionName) {
-        sections.forEach(section => {
-            if (section.id === "section-" + sectionName) {
-                section.style.display = "block";
-            } else {
-                section.style.display = "none";
-            }
-        });
-
-        if (sectionName === "annonces") {
-            chargerDepots();
-        }
-        if (sectionName === "depot") {
-            chargerDemandesDepot();
-        }
-    }
-
-    // Afficher la première section au chargement
-    if (sections.length > 0) {
-        sections.forEach((section, index) => {
-            section.style.display = index === 0 ? "block" : "none";
-        });
-    }
-
-    // Ecouter les clics sur les boutons du menu
-    buttons.forEach(button => {
-        button.addEventListener("click", () => {
-            const sectionName = button.getAttribute("data-section");
-            console.log("Section cliquée :", sectionName);
-            showSection(sectionName);
-        });
-    });
-});
 
 
 // GESTION DE LA DECONNEXION

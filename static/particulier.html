@@ -34,7 +34,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="#">UpcycleConnect</a>
+            <a class="navbar-brand" href="#">UpcycleConnect | Particulier</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -44,7 +44,7 @@
                         <button class="nav-link" data-section="accueil" data-i18n="accueil">Accueil</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="depot" data-i18n="depot">Dépôt</button>
+                        <button class="nav-link" data-section="depot" data-i18n="depot">Mes annonces</button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link" data-section="catalogue" data-i18n="catalogue">Catalogue</button>
@@ -53,17 +53,16 @@
                         <button class="nav-link" data-section="conseil" data-i18n="conseils">Conseils</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="evenements" data-i18n="evenements">Evènements</button>
+                        <button class="nav-link" data-section="evenements" data-i18n="evenements">Évènements</button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link" data-section="profil" data-i18n="profil">Profil</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Conteneur</button>
+                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Dépôt en conteneur</button>
                     </li>
-                    <li>
-                        <button class="nav-link" data-section="prestations">Prestations et formations
-                        </button>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="prestations">Prestations et formations</button>
                     </li>
                 </ul>
                 <button class="btn btn-sm btn-outline-dark" onclick="traduire('fr')">FR</button>
@@ -88,31 +87,34 @@
             <div class="progress mt-3" style="max-width:300px">
                 <div class="progress-bar" id="score-barre" role="progressbar" style="width: 0%"></div>
             </div>
-            <h2 class="mt-4" data-i18n="mesDepots">Mes derniers dépôts</h2>
+            <h2 class="mt-4" data-i18n="mesDepots">Mes dernières annonces</h2>
             <div id="accueil-depots"></div>
             <h2 class="mt-4" data-i18n="monPlanning">Mon planning</h2>
             <div id="accueil-planning"></div>
+            <h2 class="mt-4">Mes réservations</h2>
+            <div id="accueil-reservations"></div>
         </section>
 
 
         <section id="section-conteneur" class="d-none">
-            <h1 data-i18n="conteneurTitre">Conteneur</h1>
+            <h1 data-i18n="conteneurTitre">Dépôt en conteneur</h1>
             <div id="liste-conteneur"></div>
+
+            <h2 class="mt-4">Demandes de récupération</h2>
+            <div id="liste-demandes"></div>
 
             <h2 class="mt-4" data-i18n="demanderDepot">Demander un dépôt en conteneur</h2>
             <form id="form-conteneur">
                 <div class="mb-2">
                     <select id="conteneur-annonce" class="form-control" required>
-
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" data-i18n="envoyerDemande">Envoyer la demande</button>
             </form>
-
         </section>
 
         <section id="section-depot" class="d-none">
-            <h1 data-i18n="mesDepotsTitre">Mes dépôts</h1>
+            <h1 data-i18n="mesDepotsTitre">Mes annonces</h1>
 
             <table class="table table-striped mt-3">
                 <thead>
@@ -128,7 +130,7 @@
                 <tbody id="tableau-depots"></tbody>
             </table>
 
-            <h2 class="mt-4" data-i18n="deposerObjet">Déposer un objet</h2>
+            <h2 class="mt-4" data-i18n="deposerObjet">Créer une annonce</h2>
             <form id="form-depot">
                 <div class="mb-2">
                     <input type="text" id="depot-titre" data-i18n-placeholder="phTitre" class="form-control" required>
@@ -156,7 +158,7 @@
                     <input type="number" id="depot-prix" data-i18n-placeholder="phPrix" class="form-control" step="0.01"
                         min="0" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Déposer</button>
+                <button type="submit" class="btn btn-primary">Publier l'annonce</button>
             </form>
         </section>
 
@@ -182,8 +184,8 @@
                 </thead>
                 <tbody id="tableau-catalogue"></tbody>
             </table>
-
         </section>
+
         <section id="section-prestations" class="d-none">
             <h1>Prestations et formations</h1>
             <select id="filtre-prestations" class="form-control mb-3" style="max-width: 300px;">
@@ -237,9 +239,9 @@
                 <div class="mb-2">
                     <input type="password" id="profil-mdp" data-i18n-placeholder="phNouveauMdp" class="form-control">
                 </div>
-                <button type="submit" class="btn btn-primary" data-i18n="enregistrer">Enregister</button>
+                <button type="submit" class="btn btn-primary" data-i18n="enregistrer">Enregistrer</button>
             </form>
-            <button type="button" class="btn btn-outline-primary mt-3" id="btn-revoir-tuto"> Revoir le tutoriel</button>
+            <button type="button" class="btn btn-outline-primary mt-3" id="btn-revoir-tuto">Revoir le tutoriel</button>
         </section>
 
     </main>
@@ -247,7 +249,7 @@
     <div id="tuto-overlay" class="tuto-overlay d-none">
         <div class="tuto-box">
             <h3 id="tuto-titre">Titre</h3>
-            <p id=tuto-texte>Texte</p>
+            <p id="tuto-texte">Texte</p>
             <button class="btn btn-primary" id="tuto-suivant">Suivant</button>
         </div>
     </div>
