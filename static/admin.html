@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -21,7 +20,8 @@
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <button class="nav-link" data-section="utilisateurs" data-i18n="utilisateurs">Utilisateurs</button>
+                        <button class="nav-link" data-section="utilisateurs"
+                            data-i18n="utilisateurs">Utilisateurs</button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link" data-section="categorie" data-i18n="categorie">Catégorie</button>
@@ -38,6 +38,10 @@
                     <li class="nav-item">
                         <button class="nav-link" data-section="depot" data-i18n="depot">Dépôts</button>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="recuperations">Récupérations</button>
+                    </li>
+
                     <li class="nav-item">
                         <button class="nav-link" data-section="conseil" data-i18n="conseil">Conseils</button>
                     </li>
@@ -162,7 +166,8 @@
                 <input type="number" id="presta-Tarif" placeholder="Tarif" class="form-control" required step="0.01">
             </div>
             <div class="mb-2">
-                <input type="number" id="presta-CapaciteMax" placeholder="Capacité Maximum" class="form-control" required>
+                <input type="number" id="presta-CapaciteMax" placeholder="Capacité Maximum" class="form-control"
+                    required>
             </div>
             <button type="submit" class="btn btn-primary">Créer</button>
         </form>
@@ -203,7 +208,8 @@
                 <input type="number" id="events_duree" placeholder="Durée" class="form-control" required>
             </div>
             <div class="mb-2">
-                <input type="number" id="events_capacite_max" placeholder="Capacité Maximum" class="form-control" required>
+                <input type="number" id="events_capacite_max" placeholder="Capacité Maximum" class="form-control"
+                    required>
             </div>
             <button type="submit" class="btn btn-primary">Créer</button>
         </form>
@@ -234,7 +240,7 @@
         </div>
     </section>
 
-    <!-- GESTION DES DEMANDES DE DEPOT -->
+    <!-- DEMANDES DE DEPOT -->
     <section id="section-depot">
         <div class="container mt-4">
             <h1>Toutes les demandes de dépôt</h1>
@@ -254,6 +260,26 @@
             </div>
         </div>
     </section>
+    <section id="section-recuperations">
+        <div class="container mt-4">
+            <h1>Demandes de récupération</h1>
+            <div class="table-responsive">
+                <table class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Conteneur</th>
+                            <th>Professionnel</th>
+                            <th>Particulier</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-recuperations"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
 
     <section id="section-conseil">
         <h2 class="mt-4">Ajouter un conseil</h2>

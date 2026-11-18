@@ -114,6 +114,7 @@ document.getElementById("form-annonce").addEventListener("submit", async e => {
         titre: document.getElementById("annonce-titre").value,
         description: document.getElementById("annonce-description").value,
         type_annonce: document.getElementById("annonce-type").value,
+        nature_annonce: document.getElementById("annonce-nature").value,
         prix_vente: Number(document.getElementById("annonce-prix").value)
     };
 
@@ -145,27 +146,45 @@ async function supprimerAnnonce(id) {
 }
 
 async function chargerConteneurs() {
-    try {
-        const depots = await api("/depotmesconteneurs");
-        const tableau = document.getElementById("tableau-conteneurs");
-        tableau.innerHTML = "";
+    const reponse = await fetch("/depotmesconteneurs", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const depots = await reponse.json();
+    const tableau = document.getElementById("tableau-conteneurs");
+    tableau.innerHTML = "";
 
-        depots.forEach(d => {
-            tableau.innerHTML += `
-                <tr>
-                    <td>${d.titre}</td>
-                    <td>${d.description}</td>
-                    <td>${d.statut}</td>
-                    <td>${d.code_barres || "En attente"}</td>
-                    <td>${d.code_ouverture || "En attente"}</td>
-                </tr>`;
-        });
-
-        if (!depots.length) tableau.innerHTML = "<tr><td colspan='5'>Aucun dépôt pour le moment.</td></tr>";
-    } catch (e) {
-        alert(e.message);
+    if (depots.length === 0) {
+        tableau.innerHTML = "<tr><td colspan='6'>Aucun dépôt pour le moment.</td></tr>";
+        return;
     }
+
+    depots.forEach(d => {
+        let justificatif = "";
+        if (d.statut === "VALIDE") {
+            justificatif = `
+                <img id="codebarres-${d.ID}" class="d-block mb-2" style="max-width:200px">
+                <button onclick="telechargerPDF(${d.ID})" class="btn btn-primary btn-sm">PDF</button>
+            `;
+        }
+        tableau.innerHTML += `
+            <tr>
+                <td>${d.titre}</td>
+                <td>${d.description}</td>
+                <td>${d.statut}</td>
+                <td>${d.code_barres || "En attente"}</td>
+                <td>${d.code_ouverture || "En attente"}</td>
+                <td>${justificatif}</td>
+            </tr>`;
+    });
+
+    //images  chargées apres la boucle, sinon innerHTML += les efface
+    depots.forEach(d => {
+        if (d.statut === "VALIDE") {
+            chargerImageCodeBarres(d.ID);
+        }
+    });
 }
+
 
 async function chargerRecuperation() {
     try {
@@ -334,4 +353,42 @@ async function confirmerRecuperation(id) {
         alert(data.erreur);
     }
     chargerMesDemandes();
+}
+
+const natureAnnoncePro = document.getElementById("annonce-nature");
+const champPrixPro = document.getElementById("annonce-prix");
+
+natureAnnoncePro.addEventListener("change", function () {
+    if (natureAnnoncePro.value === "DON") {
+        champPrixPro.value = 0;
+        champPrixPro.disabled = true;
+    } else {
+        champPrixPro.value = "";
+        champPrixPro.disabled = false;
+    }
+});
+
+
+async function chargerImageCodeBarres(id) {
+    const reponse = await fetch(`/conteneur/${id}/codebarres`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!reponse.ok) {
+        return;
+    }
+    const blob = await reponse.blob();
+    const url = URL.createObjectURL(blob);
+    document.getElementById("codebarres-" + id).src = url;
+}
+
+async function telechargerPDF(id) {
+    const reponse = await fetch(`/conteneur/${id}/pdf`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const blob = await reponse.blob();
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = "justificatif.pdf";
+    lien.click();
 }

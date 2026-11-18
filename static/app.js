@@ -1,23 +1,30 @@
-
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
+//si on est pas connecté en admin on retourne au login
 if (!token || role !== "admin") {
     window.location.href = "/";
 }
+
+//affiche le message du back si ça a pas marché
+async function afficherResultat(reponse) {
+    if (reponse.ok) {
+        alert("Enregistré");
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+}
+
 
 // GESTION DES UTILISATEURS
 
 async function chargerUtilisateurs() {
     const reponse = await fetch("/utilisateurs", {
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     const utilisateurs = await reponse.json();
     const tbody = document.getElementById("tableau-utilisateurs");
-
     tbody.innerHTML = "";
 
     utilisateurs.forEach(u => {
@@ -33,11 +40,9 @@ async function chargerUtilisateurs() {
                 </td>
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
-
 chargerUtilisateurs();
 
 let idEnModification = null;
@@ -60,42 +65,38 @@ document.getElementById("form-user").addEventListener("submit", async function (
         role: document.getElementById("input-role").value
     };
 
+    let reponse;
     if (idEnModification === null) {
-        await fetch("/utilisateurs", {
+        reponse = await fetch("/utilisateurs", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelUser)
         });
     } else {
-        await fetch(`/utilisateurs/${idEnModification}`, {
+        reponse = await fetch(`/utilisateurs/${idEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelUser)
         });
-
         idEnModification = null;
     }
 
+    await afficherResultat(reponse);
     document.getElementById("form-user").reset();
     chargerUtilisateurs();
 });
 
 async function supprimerUtilisateur(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/utilisateurs/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerUtilisateurs();
 }
 
@@ -104,12 +105,11 @@ async function supprimerUtilisateur(id) {
 
 async function chargerCategories() {
     const reponse = await fetch("/categoriePresta");
-    const categorie = await reponse.json();
-
+    const categories = await reponse.json();
     const tbody = document.getElementById("tableau-categories");
     tbody.innerHTML = "";
 
-    categorie.forEach(u => {
+    categories.forEach(u => {
         const ligne = `
             <tr>
                 <td>${u.ID}</td>
@@ -121,11 +121,9 @@ async function chargerCategories() {
                 </td>
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
-
 chargerCategories();
 
 let idCatEnModification = null;
@@ -137,15 +135,10 @@ function preparerModificationCat(id, nom, description) {
 }
 
 async function supprimerCategorie(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/categoriePresta/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerCategories();
 }
 
@@ -157,28 +150,29 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
         description: document.getElementById("cat-description").value
     };
 
+    let reponse;
     if (idCatEnModification === null) {
-        await fetch("/categoriePresta", {
+        reponse = await fetch("/categoriePresta", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelCat)
         });
     } else {
-        await fetch(`/categoriePresta/${idCatEnModification}`, {
+        reponse = await fetch(`/categoriePresta/${idCatEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelCat)
         });
-
         idCatEnModification = null;
     }
 
+    await afficherResultat(reponse);
     document.getElementById("form-categorie").reset();
     chargerCategories();
 });
@@ -188,12 +182,11 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
 
 async function chargerPrestation() {
     const reponse = await fetch("/prestations");
-    const prestation = await reponse.json();
-
+    const prestations = await reponse.json();
     const tbody = document.getElementById("tableau-prestation");
     tbody.innerHTML = "";
 
-    prestation.forEach(u => {
+    prestations.forEach(u => {
         const ligne = `
             <tr>
                 <td>${u.ID}</td>
@@ -208,11 +201,9 @@ async function chargerPrestation() {
                 </td>
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
-
 chargerPrestation();
 
 let idPrestaEnModification = null;
@@ -227,15 +218,10 @@ function preparerModificationPresta(id, nom, description, typeOffre, tarif, capa
 }
 
 async function supprimerPresta(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/prestations/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerPrestation();
 }
 
@@ -250,28 +236,29 @@ document.getElementById("form-prestation").addEventListener("submit", async func
         capacite_max: parseInt(document.getElementById("presta-CapaciteMax").value)
     };
 
+    let reponse;
     if (idPrestaEnModification === null) {
-        await fetch("/prestations", {
+        reponse = await fetch("/prestations", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelPresta)
         });
     } else {
-        await fetch(`/prestations/${idPrestaEnModification}`, {
+        reponse = await fetch(`/prestations/${idPrestaEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + token
             },
             body: JSON.stringify(nouvelPresta)
         });
-
         idPrestaEnModification = null;
     }
 
+    await afficherResultat(reponse);
     document.getElementById("form-prestation").reset();
     chargerPrestation();
 });
@@ -282,7 +269,6 @@ document.getElementById("form-prestation").addEventListener("submit", async func
 async function chargerEvenements() {
     const reponse = await fetch("/evenements");
     const evenements = await reponse.json();
-
     const tbody = document.getElementById("tableau-evenements");
     tbody.innerHTML = "";
 
@@ -301,11 +287,9 @@ async function chargerEvenements() {
                 </td>
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
-
 chargerEvenements();
 
 let idEventsEnModification = null;
@@ -314,21 +298,17 @@ function preparerModificationEvents(id, titre, description, date_heure_debut, du
     idEventsEnModification = id;
     document.getElementById("events_titre").value = titre;
     document.getElementById("events_description").value = description;
-    document.getElementById("events_date").value = date_heure_debut;
+    //le champ datetime-local veut le format AAAA-MM-JJTHH:MM
+    document.getElementById("events_date").value = date_heure_debut.slice(0, 16);
     document.getElementById("events_duree").value = duree_minutes;
     document.getElementById("events_capacite_max").value = capacite_max;
 }
 
 async function supprimerEvents(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/evenements/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerEvenements();
 }
 
@@ -339,14 +319,13 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
         titre: document.getElementById("events_titre").value,
         description: document.getElementById("events_description").value,
         date_heure_debut: document.getElementById("events_date").value,
-        duree_minutes: parseFloat(document.getElementById("events_duree").value),
+        duree_minutes: parseInt(document.getElementById("events_duree").value),
         capacite_max: parseInt(document.getElementById("events_capacite_max").value)
     };
 
-    const token = localStorage.getItem("token");
-
+    let reponse;
     if (idEventsEnModification === null) {
-        await fetch("/evenements", {
+        reponse = await fetch("/evenements", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -355,7 +334,7 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
             body: JSON.stringify(nouvelEvents)
         });
     } else {
-        await fetch(`/evenements/${idEventsEnModification}`, {
+        reponse = await fetch(`/evenements/${idEventsEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -363,10 +342,10 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
             },
             body: JSON.stringify(nouvelEvents)
         });
-
         idEventsEnModification = null;
     }
 
+    await afficherResultat(reponse);
     document.getElementById("form-evenement").reset();
     chargerEvenements();
 });
@@ -376,9 +355,7 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
 
 async function chargerDemandesDepot() {
     const reponse = await fetch("/depotconteneurs", {
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
 
     if (!reponse.ok) {
@@ -387,37 +364,32 @@ async function chargerDemandesDepot() {
     }
 
     const depots = await reponse.json();
-    console.log(depots)
     const tbody = document.getElementById("tableau-depot");
-
     tbody.innerHTML = "";
 
     depots.forEach(d => {
+        //on peut valider ou refuser seulement si la demande est en attente
+        let boutons = "Déjà traité";
+        if (d.statut === "EN_ATTENTE") {
+            boutons = `
+                <button onclick="validerDepot(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+                <button onclick="refuserDepot(${d.ID})" class="btn btn-danger btn-sm">Refuser</button>
+            `;
+        }
         const ligne = `
             <tr>
                 <td>${d.ID}</td>
                 <td>${d.titre}</td>
                 <td>${d.description}</td>
                 <td>${d.statut}</td>
-                <td>
-                    ${d.statut === "EN_ATTENTE"
-                ? `
-        <button onclick="validerDepot(${d.ID})" class="btn btn-success btn-sm">Valider</button>
-        <button onclick="refuserDepot(${d.ID})" class="btn btn-danger btn-sm">Refuser</button>
-      `
-                : "Déjà traité"}
-                </td>
+                <td>${boutons}</td>
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
 
-
 async function validerDepot(id) {
-    const token = localStorage.getItem("token");
-
     const reponse = await fetch(`/depotconteneurs/${id}`, {
         method: "PUT",
         headers: {
@@ -428,18 +400,15 @@ async function validerDepot(id) {
     });
 
     if (reponse.ok) {
-        await chargerDemandesDepot();
+        chargerDemandesDepot();
     } else {
         const data = await reponse.json();
-        alert(data.erreur || "Erreur lors de la validation.");
+        alert(data.erreur);
     }
 }
 
 async function refuserDepot(id) {
-    const token = localStorage.getItem("token");
-
-    const confirmation = confirm("Voulez-vous vraiment refuser cette demande ?");
-    if (!confirmation) {
+    if (!confirm("Voulez-vous vraiment refuser cette demande ?")) {
         return;
     }
 
@@ -453,36 +422,59 @@ async function refuserDepot(id) {
     });
 
     if (reponse.ok) {
-        await chargerDemandesDepot();
+        chargerDemandesDepot();
     } else {
         const data = await reponse.json();
-        alert(data.erreur || "Erreur lors du refus.");
+        alert(data.erreur);
     }
 }
 
+
+// GESTION DES DEMANDES DE RECUPERATION
+
+async function chargerRecuperationsAdmin() {
+    const reponse = await fetch("/demandes-recuperation", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const demandes = await reponse.json();
+    const tbody = document.getElementById("tableau-recuperations");
+    tbody.innerHTML = "";
+
+    if (demandes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-muted">Aucune demande pour l'instant.</td></tr>`;
+        return;
+    }
+
+    demandes.forEach(d => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${d.ID}</td>
+                <td>${d.conteneur_id}</td>
+                <td>${d.professionnel_id}</td>
+                <td>${d.particulier_ID}</td>
+                <td>${d.statut}</td>
+            </tr>`;
+    });
+}
 
 
 // GESTION DES ANNONCES
 
 async function chargerDepots() {
     const reponse = await fetch("/annonces", {
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
-    const depots = await reponse.json();
+    const annonces = await reponse.json();
     const tbody = document.getElementById("tableau-annonces");
-
     tbody.innerHTML = "";
 
-    depots.forEach(d => {
+    annonces.forEach(d => {
         let boutons = "";
         if (d.statut === "EN_ATTENTE") {
             boutons = `
-            <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
-            <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
-        `;
+                <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+                <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
+            `;
         }
         const ligne = `
             <tr>
@@ -494,22 +486,17 @@ async function chargerDepots() {
                 <td>${d.prix_vente}</td>
                 <td>${d.statut}</td>
                 <td>${d.utilisateur_id}</td>
-
                 <td>
                     ${boutons}
                     <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
                 </td>
-
             </tr>
         `;
-
         tbody.innerHTML += ligne;
     });
 }
 
 async function validerAnnonce(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/annonces/${id}/statut`, {
         method: "PUT",
         headers: {
@@ -518,13 +505,10 @@ async function validerAnnonce(id) {
         },
         body: JSON.stringify({ statut: "VALIDE" })
     });
-
     chargerDepots();
 }
 
 async function refuserAnnonce(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/annonces/${id}/statut`, {
         method: "PUT",
         headers: {
@@ -533,20 +517,14 @@ async function refuserAnnonce(id) {
         },
         body: JSON.stringify({ statut: "REFUSE" })
     });
-
     chargerDepots();
 }
 
 async function supprimerDepots(id) {
-    const token = localStorage.getItem("token");
-
     await fetch(`/annonces/${id}`, {
         method: "DELETE",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
+        headers: { "Authorization": "Bearer " + token }
     });
-
     chargerDepots();
 }
 
@@ -559,25 +537,25 @@ let idConseilEnModification = null;
 async function chargerConseils() {
     const reponse = await fetch("/conseils");
     tousLesConseils = await reponse.json();
-
     const tbody = document.getElementById("tableau-conseils");
     tbody.innerHTML = "";
 
     tousLesConseils.forEach(c => {
         tbody.innerHTML += `
-        <tr>
-            <td>${c.ID}</td>
-            <td>${c.titre}</td>
-            <td>${c.contenu}</td>
-            <td>
-                <button onclick="preparerModificationConseil(${c.ID})" class="btn btn-warning btn-sm">Modifier</button>
-                <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
-            </td>
-        </tr>`;
+            <tr>
+                <td>${c.ID}</td>
+                <td>${c.titre}</td>
+                <td>${c.contenu}</td>
+                <td>
+                    <button onclick="preparerModificationConseil(${c.ID})" class="btn btn-warning btn-sm">Modifier</button>
+                    <button onclick="supprimerConseil(${c.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+                </td>
+            </tr>`;
     });
 }
 chargerConseils();
 
+//on retrouve le conseil dans la liste deja chargée, comme ça pas de souci avec les apostrophes
 function preparerModificationConseil(id) {
     const conseil = tousLesConseils.find(c => c.ID === id);
     idConseilEnModification = id;
@@ -593,8 +571,9 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
         contenu: document.getElementById("conseil-contenu").value
     };
 
+    let reponse;
     if (idConseilEnModification === null) {
-        await fetch("/conseils", {
+        reponse = await fetch("/conseils", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -603,7 +582,7 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
             body: JSON.stringify(nouveauConseil)
         });
     } else {
-        await fetch(`/conseils/${idConseilEnModification}`, {
+        reponse = await fetch(`/conseils/${idConseilEnModification}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -614,6 +593,7 @@ document.getElementById("form-conseil").addEventListener("submit", async functio
         idConseilEnModification = null;
     }
 
+    await afficherResultat(reponse);
     document.getElementById("form-conseil").reset();
     chargerConseils();
 });
@@ -627,14 +607,47 @@ async function supprimerConseil(id) {
 }
 
 
-// GESTION DE LA DECONNEXION
+// TRADUCTIONS
 
-const btnLogout = document.getElementById("btn-logout");
+async function traduire(langue) {
+    const reponse = await fetch(`/static/${langue}.json`);
+    const textes = await reponse.json();
 
-if (btnLogout) {
-    btnLogout.addEventListener("click", () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        window.location.href = "/";
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+        const cle = element.getAttribute("data-i18n");
+        element.textContent = textes[cle];
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+        const cle = element.getAttribute("data-i18n-placeholder");
+        element.placeholder = textes[cle];
     });
 }
+
+// NAVIGATION ENTRE LES SECTIONS
+
+function afficherSection(nom) {
+    document.querySelectorAll("section").forEach(s => s.style.display = "none");
+    document.getElementById("section-" + nom).style.display = "block";
+
+    //certaines sections chargent leurs données seulement quand on clique dessus
+    if (nom === "annonces") chargerDepots();
+    if (nom === "depot") chargerDemandesDepot();
+    if (nom === "recuperations") chargerRecuperationsAdmin();
+}
+
+document.querySelectorAll("[data-section]").forEach(bouton => {
+    bouton.addEventListener("click", () => afficherSection(bouton.dataset.section));
+});
+
+//au chargement on affiche seulement les utilisateurs
+afficherSection("utilisateurs");
+
+
+// DECONNEXION
+
+document.getElementById("btn-logout").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/";
+});

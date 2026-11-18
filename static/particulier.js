@@ -2,7 +2,7 @@ let tousLesObjets = [];
 let annonceEnModification = null;
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role")
-if(!token || role != "particulier"){
+if (!token || role != "particulier") {
     window.location.href = "/"
 }
 
@@ -66,7 +66,7 @@ async function chargerDepots() {
     const depots = await reponse.json()
     if (depots.length === 0) {
         const tbody = document.getElementById("tableau-depots");
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Aucun dépôt pour l'instant</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Aucune annonce pour l'instant</td></tr>`;
         return
     } else {
         //recupere l'element HTML avec l'id c'est donc tbdoy
@@ -191,7 +191,7 @@ document.getElementById("form-profil").addEventListener("submit", async function
         email: document.getElementById("profil-email").value,
         mot_de_passe: document.getElementById("profil-mdp").value,
     };
-        const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
     const reponse = await fetch("/profil", {
         method: "PUT",
         headers: {
@@ -295,14 +295,20 @@ chargerScore();
 const etapesTuto = [
     {
         titre: "Bienvenue sur UpcycleConnect !",
-        texte: "Depuis votre espace personnel, vous pouvez gérer vos dépôts, découvrir des objets et participer à des événements.",
+        texte: "Depuis votre espace personnel, vous pouvez gérer vos annonces, découvrir des objets et participer à des événements.",
         section: "accueil"
     },
     {
-        titre: "Vos dépôts",
-        texte: "Dans cette rubrique, vous pouvez consulter vos dépôts et déposer de nouveaux objets.",
+        titre: "Vos annonces",
+        texte: "Créez vos annonces de don ou de vente. Elles sont publiées après validation par un administrateur.",
         section: "depot"
     },
+    {
+        titre: "Le dépôt en conteneur",
+        texte: "Une fois votre annonce validée, déposez l'objet dans un conteneur. Vous recevez un code d'ouverture et un code-barres à coller sur l'objet.",
+        section: "conteneur"
+    },
+
     {
         titre: "Le catalogue",
         texte: "Découvrez les objets disponibles et recherchez ceux qui vous intéressent.",
@@ -352,8 +358,7 @@ document.getElementById("btn-revoir-tuto").addEventListener("click", () => {
 });
 
 functionPremierLogin();
-console.log("Tutoriel :", localStorage.getItem("tutoVu"));
-console.log("Overlay :", document.getElementById("tuto-overlay"));
+
 
 async function chargerApercuDepots() {
     const reponse = await fetch("/mesannonces", {
@@ -367,7 +372,7 @@ async function chargerApercuDepots() {
     div.innerHTML = "";
 
     if (apercu.length === 0) {
-        div.innerHTML = `<p class="text-muted">Aucun dépôt pour l'instant.</p>`;
+        div.innerHTML = `<p class="text-muted">Aucune annonce pour l'instant.</p>`;
         return;
     }
 
@@ -513,12 +518,12 @@ async function chargerConteneur() {
     `;
         } else if (c.statut === "REFUSE") {
             codes = `<p class="text-danger">Votre demande a été refusée.</p>`;
-        } else if (c.statut === "RESERVE"){
+        } else if (c.statut === "RESERVE") {
             codes = `<p class="text-danger">Objet déjà réservé.</p>`;
-        } else if (c.statut === "rECUPERE"){
-            codes = `<p class="text-danger">Objet déjà récupéré.</p>`;
+        } else if (c.statut === "RECUPERE") {
+            codes = `<p class="text-succes">Objet déjà récupéré.</p>`;
         } else {
-            codes = `<p class="text-muted">Votre demande est en cours de traitement.</p>`;
+            codes = `<p class="text-success">Votre demande est en cours de traitement.</p>`;
         }
 
         const bloc = `

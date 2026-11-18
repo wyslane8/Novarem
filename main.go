@@ -116,7 +116,7 @@ func main() {
 	r.PUT("/demandes-recuperation/:id", authConnecte(), repondreDemandeRecuperation)
 
 	r.GET("/conteneur/:id/pdf", authConnecte(), genererPDFConteneur)
-	r.GET("/conteneur/:id/codebarres", authConnecte(), afficherCodeBarres)
+	r.GET("/demandes-recuperation", authAdmin(), getMesDemandesRecuperation)
 
 	r.POST("/professionnel/demandes-recuperation", authConnecte(), authProfessionnel(), creerDemandesRecuperation)
 	r.GET("/professionnel/mes-demandes", authConnecte(), authProfessionnel(), getMesDemandesPro)
@@ -1290,4 +1290,10 @@ func confirmerRecuperation(c *gin.Context) {
 	db.Save(&conteneur)
 
 	c.JSON(http.StatusOK, demande)
+}
+
+func getDemandesRecuperation(c *gin.Context) {
+	var demandes []DemandeRecuperation
+	db.Find(&demandes)
+	c.JSON(http.StatusOK, demandes)
 }

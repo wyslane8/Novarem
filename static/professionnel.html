@@ -130,6 +130,11 @@
                     <option value="Électronique">Électronique</option>
                     <option value="Décoration">Décoration</option>
                 </select>
+                <select class="form-control mb-2" id="annonce-nature" required>
+                    <option value="VENTE">Vente</option>
+                    <option value="DON">Don</option>
+                </select>
+
                 <input class="form-control mb-2" type="number" min="0" step="0.01" id="annonce-prix"
                     placeholder="Prix (€)" required>
                 <button class="btn btn-primary" type="submit">Publier mon annonce</button>
@@ -149,6 +154,7 @@
                             <th>Statut</th>
                             <th>Code-barres</th>
                             <th>Code d'ouverture</th>
+                            <th>Justificatif</th>
                         </tr>
                     </thead>
                     <tbody id="tableau-conteneurs"></tbody>
