@@ -59,7 +59,14 @@
                         <button class="nav-link" data-section="profil" data-i18n="profil">Profil</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Dépôt en conteneur</button>
+                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Dépôt en
+                            conteneur</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="forum" data-i18n="forum">Forum</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="actualites" data-i18n="actualites">Actualités</button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link" data-section="prestations">Prestations et formations</button>
@@ -94,8 +101,37 @@
             <h2 class="mt-4">Mes réservations</h2>
             <div id="accueil-reservations"></div>
         </section>
+        <section id="section-forum" class="d-none">
+            <h1>Forum de la communauté</h1>
 
+            <div id="forum-liste">
+                <h2 class="mt-3">Nouveau sujet</h2>
+                <form id="form-sujet" class="mb-4">
+                    <input id="sujet-titre" class="form-control mb-2" placeholder="Titre du sujet" required>
+                    <textarea id="sujet-contenu" class="form-control mb-2" placeholder="Votre message"
+                        required></textarea>
+                    <button class="btn btn-primary" type="submit">Publier</button>
+                </form>
+                <h2>Sujets</h2>
+                <div id="liste-sujets"></div>
+            </div>
 
+            <div id="forum-sujet" class="d-none">
+                <button id="btn-retour-forum" class="btn btn-outline-secondary mb-3">← Retour aux sujets</button>
+                <h2 id="sujet-affiche-titre"></h2>
+                <div id="liste-messages"></div>
+                <form id="form-message">
+                    <textarea id="message-contenu" class="form-control mb-2" placeholder="Répondre..."
+                        required></textarea>
+                    <button class="btn btn-primary" type="submit">Répondre</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="section-actualites" class="d-none">
+            <h1>Actualités</h1>
+            <div id="liste-actualites"></div>
+        </section>
         <section id="section-conteneur" class="d-none">
             <h1 data-i18n="conteneurTitre">Dépôt en conteneur</h1>
             <div id="liste-conteneur"></div>

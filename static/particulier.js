@@ -5,6 +5,16 @@ const role = localStorage.getItem("role")
 if (!token || role != "particulier") {
     window.location.href = "/"
 }
+async function afficherResultat(reponse) {
+    if (reponse.ok) {
+        alert("Enregistré");
+    } else if (reponse.status === 404) {
+        alert("Fonctionnalité bientôt disponible");
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+}
 
 function afficherSection(nom) {
     document.querySelectorAll("main section").forEach(s => s.classList.add("d-none"));
@@ -735,3 +745,152 @@ document.getElementById("filtre-prestations").addEventListener("change", functio
         afficherPrestations(toutesLesPrestations.filter(p => p.type_offre === "Formation"));
     }
 });
+
+
+// Forum
+
+let tousLesSujets = [];
+let sujetOuvert = null;
+
+async function chargerSujets() {
+    const reponse = await fetch("/forum/sujets", {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    const div = document.getElementById("liste-sujets");
+    div.innerHTML = "";
+
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    tousLesSujets = await reponse.json();
+    if (tousLesSujets.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucun sujet pour l'instant. Lancez la discussion !</p>`;
+        return;
+    }
+
+    tousLesSujets.forEach(s => {
+        const date = new Date(s.CreatedAt).toLocaleDateString("fr-FR");
+        div.innerHTML += `
+        <div class="card mb-2">
+            <div class="card-body">
+                <h5 class="card-title">${s.titre}</h5>
+                <p class="card-text text-muted mb-2">par ${s.auteur_nom} · ${date}</p>
+                <button onclick="ouvrirSujet(${s.ID})" class="btn btn-outline-primary btn-sm">Voir la discussion</button>
+            </div>
+        </div>`;
+    });
+}
+chargerSujets();
+
+document.getElementById("form-sujet").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouveauSujet = {
+        titre: document.getElementById("sujet-titre").value,
+        contenu: document.getElementById("sujet-contenu").value
+    };
+    const reponse = await fetch("/forum/sujets", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify(nouveauSujet)
+    });
+    await afficherResultat(reponse);
+    document.getElementById("form-sujet").reset();
+    chargerSujets();
+});
+
+//on passe de la liste des sujets a la discussion
+async function ouvrirSujet(id) {
+    const sujet = tousLesSujets.find(s => s.ID === id);
+    sujetOuvert = id;
+    document.getElementById("sujet-affiche-titre").textContent = sujet.titre;
+    document.getElementById("forum-liste").classList.add("d-none");
+    document.getElementById("forum-sujet").classList.remove("d-none");
+    chargerMessages();
+}
+
+async function chargerMessages() {
+    const reponse = await fetch(`/forum/sujets/${sujetOuvert}/messages`, {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    const div = document.getElementById("liste-messages");
+    div.innerHTML = "";
+
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    const messages = await reponse.json();
+    messages.forEach(m => {
+        const date = new Date(m.CreatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+        div.innerHTML += `
+        <div class="card mb-2">
+            <div class="card-body">
+                <p class="card-text">${m.contenu}</p>
+                <p class="card-text text-muted small mb-0">${m.auteur_nom} · ${date}</p>
+            </div>
+        </div>`;
+    });
+}
+
+document.getElementById("form-message").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const reponse = await fetch(`/forum/sujets/${sujetOuvert}/messages`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ contenu: document.getElementById("message-contenu").value })
+    });
+    if (!reponse.ok) {
+        await afficherResultat(reponse);
+    }
+    document.getElementById("form-message").reset();
+    chargerMessages();
+});
+
+document.getElementById("btn-retour-forum").addEventListener("click", () => {
+    sujetOuvert = null;
+    document.getElementById("forum-sujet").classList.add("d-none");
+    document.getElementById("forum-liste").classList.remove("d-none");
+    chargerSujets();
+});
+
+
+// actu
+
+async function chargerActualites() {
+    const reponse = await fetch("/actualites");
+    const div = document.getElementById("liste-actualites");
+    div.innerHTML = "";
+
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    const actualites = await reponse.json();
+    if (actualites.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucune actualité pour le moment.</p>`;
+        return;
+    }
+
+    actualites.forEach(a => {
+        const date = new Date(a.CreatedAt).toLocaleDateString("fr-FR");
+        div.innerHTML += `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${a.titre}</h5>
+                <p class="card-text text-muted small">${date}</p>
+                <p class="card-text">${a.contenu}</p>
+            </div>
+        </div>`;
+    });
+}
+chargerActualites();

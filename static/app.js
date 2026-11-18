@@ -1,20 +1,21 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
-//si on est pas connecté en admin on retourne au login
 if (!token || role !== "admin") {
     window.location.href = "/";
 }
 
-//affiche le message du back si ça a pas marché
 async function afficherResultat(reponse) {
     if (reponse.ok) {
         alert("Enregistré");
+    } else if (reponse.status === 404) {
+        alert("Fonctionnalité bientôt disponible");
     } else {
         const data = await reponse.json();
         alert(data.erreur);
     }
 }
+
 
 
 // GESTION DES UTILISATEURS

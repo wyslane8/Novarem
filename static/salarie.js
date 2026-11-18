@@ -6,10 +6,11 @@ if (!token || role !== "salarie") {
     window.location.href = "/";
 }
 
-//affiche le message du back si ça a pas marché
 async function afficherResultat(reponse) {
     if (reponse.ok) {
         alert("Enregistré");
+    } else if (reponse.status === 404) {
+        alert("Fonctionnalité bientôt disponible");
     } else {
         const data = await reponse.json();
         alert(data.erreur);
@@ -17,7 +18,7 @@ async function afficherResultat(reponse) {
 }
 
 
-// GESTION DES EVENEMENTS
+// events
 
 let tousLesEvenements = [];
 let idEventsEnModification = null;
@@ -180,8 +181,186 @@ async function supprimerConseil(id) {
     chargerConseils();
 }
 
+// GESTION DES ACTUALITES
 
-// NAVIGATION ENTRE LES SECTIONS
+let toutesLesActualites = [];
+let idActuEnModification = null;
+
+async function chargerActualites() {
+    const reponse = await fetch("/actualites");
+    const tbody = document.getElementById("tableau-actualites");
+    tbody.innerHTML = "";
+
+    if (reponse.status === 404) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-muted">Fonctionnalité bientôt disponible.</td></tr>`;
+        return;
+    }
+
+    toutesLesActualites = await reponse.json();
+    toutesLesActualites.forEach(a => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${a.ID}</td>
+                <td>${a.titre}</td>
+                <td>${a.contenu}</td>
+                <td>
+                    <button onclick="preparerModificationActu(${a.ID})" class="btn btn-warning btn-sm">Modifier</button>
+                    <button onclick="supprimerActu(${a.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+                </td>
+            </tr>`;
+    });
+}
+chargerActualites();
+
+function preparerModificationActu(id) {
+    const actu = toutesLesActualites.find(a => a.ID === id);
+    idActuEnModification = id;
+    document.getElementById("actu-titre").value = actu.titre;
+    document.getElementById("actu-contenu").value = actu.contenu;
+}
+
+document.getElementById("form-actualite").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouvelleActu = {
+        titre: document.getElementById("actu-titre").value,
+        contenu: document.getElementById("actu-contenu").value
+    };
+
+    let reponse;
+    if (idActuEnModification === null) {
+        reponse = await fetch("/actualites", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouvelleActu)
+        });
+    } else {
+        reponse = await fetch(`/actualites/${idActuEnModification}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(nouvelleActu)
+        });
+        idActuEnModification = null;
+    }
+
+    await afficherResultat(reponse);
+    document.getElementById("form-actualite").reset();
+    chargerActualites();
+});
+
+async function supprimerActu(id) {
+    await fetch(`/actualites/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    chargerActualites();
+}
+
+
+// MODERATION DU FORUM
+
+let sujetsModeration = [];
+let sujetModere = null;
+
+async function chargerSujetsModeration() {
+    const reponse = await fetch("/forum/sujets", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const div = document.getElementById("moderation-sujets");
+    div.innerHTML = "";
+
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    sujetsModeration = await reponse.json();
+    if (sujetsModeration.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucun sujet pour l'instant.</p>`;
+        return;
+    }
+
+    sujetsModeration.forEach(s => {
+        div.innerHTML += `
+        <div class="card mb-2">
+            <div class="card-body">
+                <h5 class="card-title">${s.titre}</h5>
+                <p class="card-text text-muted mb-2">par ${s.auteur_nom}</p>
+                <button onclick="ouvrirSujetModeration(${s.ID})" class="btn btn-outline-primary btn-sm">Modérer</button>
+            </div>
+        </div>`;
+    });
+}
+chargerSujetsModeration();
+//on passe de la liste des sujets aux messages du sujet
+function ouvrirSujetModeration(id) {
+    const sujet = sujetsModeration.find(s => s.ID === id);
+    sujetModere = id;
+    document.getElementById("moderation-titre").textContent = sujet.titre;
+    document.getElementById("moderation-liste").classList.add("d-none");
+    document.getElementById("moderation-sujet").classList.remove("d-none");
+    chargerMessagesModeration();
+}
+
+async function chargerMessagesModeration() {
+    const reponse = await fetch(`/forum/sujets/${sujetModere}/messages`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const div = document.getElementById("moderation-messages");
+    div.innerHTML = "";
+
+    if (reponse.status === 404) {
+        div.innerHTML = `<p class="text-muted">Fonctionnalité bientôt disponible.</p>`;
+        return;
+    }
+
+    const messages = await reponse.json();
+    if (messages.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucun message dans ce sujet.</p>`;
+        return;
+    }
+
+    messages.forEach(m => {
+        div.innerHTML += `
+        <div class="card mb-2">
+            <div class="card-body">
+                <p class="card-text">${m.contenu}</p>
+                <p class="card-text text-muted small mb-2">${m.auteur_nom}</p>
+                <button onclick="supprimerMessage(${m.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+            </div>
+        </div>`;
+    });
+}
+
+async function supprimerMessage(id) {
+    if (!confirm("Supprimer ce message ?")) {
+        return;
+    }
+    const reponse = await fetch(`/forum/messages/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!reponse.ok) {
+        await afficherResultat(reponse);
+    }
+    chargerMessagesModeration();
+}
+
+document.getElementById("btn-retour-moderation").addEventListener("click", () => {
+    sujetModere = null;
+    document.getElementById("moderation-sujet").classList.add("d-none");
+    document.getElementById("moderation-liste").classList.remove("d-none");
+    chargerSujetsModeration();
+});
+
+
+
+// navig btw sections 
 
 function afficherSection(nom) {
     document.querySelectorAll("section").forEach(s => s.style.display = "none");
