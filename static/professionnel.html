@@ -19,16 +19,32 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPro">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="menuPro">
-                <div class="navbar-nav me-auto">
-                    <button class="nav-link" data-section="accueil">Accueil</button>
-                    <button class="nav-link" data-section="catalogue">Catalogue</button>
-                    <button class="nav-link" data-section="annonces">Mes annonces</button>
-                    <button class="nav-link" data-section="conteneurs">Mes dépôts</button>
-                </div>
-                <button class="btn btn-outline-secondary" id="btn-logout">Déconnexion</button>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="accueil">Accueil</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="catalogue">Catalogue</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="annonces">Mes annonces</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="conteneurs">Mes dépôts</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="recuperation">Récupération</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-section="profil">Profil</button>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-secondary ms-auto" id="btn-logout">Déconnexion</button>
             </div>
+
+            <button class="btn btn-outline-secondary" id="btn-logout">Déconnexion</button>
+        </div>
         </div>
     </nav>
 
@@ -139,9 +155,63 @@
             </form>
             <p id="conteneur-message" class="mt-2"></p>
         </section>
+        <section id="section-recuperation" class="d-none">
+            <h2>Récupération des objets</h2>
+            <p>Consultez les objets dont le dépôt a été validé.</p>
+
+            <button class="btn btn-secondary mb-3" id="actualiser-recuperation">
+                Actualiser
+            </button>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Objet</th>
+                            <th>Description</th>
+                            <th>Code-barres</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-recuperation"></tbody>
+                </table>
+            </div>
+        </section>
+        <section id="section-profil" class="d-none">
+            <h2>Mon profil</h2>
+
+            <div class="card mb-4" style="max-width:500px">
+                <div class="card-body">
+                    <h4 class="mb-0" id="profil-affiche-nom"></h4>
+                    <span class="badge bg-success" id="profil-affiche-role"></span>
+                    <hr>
+                    <p class="mb-1"><strong>Email :</strong> <span id="profil-affiche-email"></span></p>
+                    <p class="mb-0"><strong>Membre depuis :</strong> <span id="profil-affiche-date"></span></p>
+                </div>
+            </div>
+
+            <h3>Modifier mes informations</h3>
+            <form id="form-profil">
+                <div class="mb-2">
+                    <input type="text" id="profil-nom" placeholder="Nom" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <input type="email" id="profil-email" placeholder="Email" class="form-control" required>
+                </div>
+                <div class="mb-2">
+                    <input type="password" id="profil-mdp" placeholder="Nouveau mot de passe" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </form>
+        </section>
+
+
+
+
     </main>
-    
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/professionnel.js"></script></body>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/professionnel.js"></script>
+</body>
 
 </html>

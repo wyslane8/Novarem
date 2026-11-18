@@ -1,7 +1,9 @@
 let tousLesObjets = [];
+let annonceEnModification = null;
 const token = localStorage.getItem("token");
-if (!token) {
-    window.location.href = "/";
+const role = localStorage.getItem("role")
+if(!token || role != "particulier"){
+    window.location.href = "/"
 }
 
 function afficherSection(nom) {
@@ -20,16 +22,45 @@ document.querySelectorAll(".nav-link").forEach(bouton => {
 
 document.getElementById("btn-logout").addEventListener("click", () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("role")
     window.location.href = "/";
 });
 
 afficherSection("accueil");
 
+async function preparerModification(id) {
+    const reponse = await fetch("/mesannonces", {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    });
+
+    const annonces = await reponse.json();
+    const annonce = annonces.find(a => a.ID === id);
+
+    if (!annonce) {
+        alert("Annonce introuvable");
+        return
+    }
+
+    annonceEnModification = id;
+
+    document.getElementById("depot-titre").value = annonce.titre;
+    document.getElementById("depot-description").value = annonce.description;
+    document.getElementById("depot-type").value = annonce.type_annonce;
+    document.getElementById("depot-nature").value = annonce.nature_annonce;
+    document.getElementById("depot-prix").value = annonce.prix_vente;
+
+
+    champPrix.disabled = annonce.nature_annonce === "DON";
+
+    afficherSection("depot");
+}
 
 async function chargerDepots() {
     //envoi uen requete GET a l'API grâce a "fetch"
     const reponse = await fetch("/mesannonces", {
-        headers: {"Authorization" : "Bearer " + localStorage.getItem("token")}
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     });
     //transforme la reponse en objet js
     const depots = await reponse.json()
@@ -52,8 +83,10 @@ async function chargerDepots() {
         <td>${d.prix_vente}</td>
         <td>${d.statut}</td>
         <td>
-            <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
+        <button onclick="preparerModification(${d.ID})" class="btn btn-warning btn-sm">Modifier</button>
+        <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
         </td>
+
     </tr>
     `;
             tbody.innerHTML += ligne;
@@ -64,27 +97,57 @@ chargerDepots();
 
 document.getElementById("form-depot").addEventListener("submit", async function (e) {
     e.preventDefault();
+
     const nouveuDepot = {
         titre: document.getElementById("depot-titre").value,
         description: document.getElementById("depot-description").value,
         type_annonce: document.getElementById("depot-type").value,
-        prix_vente: parseFloat(document.getElementById("depot-prix").value),
-        statut: "DEPOSE"
+        nature_annonce: document.getElementById("depot-nature").value,
+        prix_vente: parseFloat(document.getElementById("depot-prix").value) || 0
     };
-    await fetch("/annonces", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("token")
-        },
-        body: JSON.stringify(nouveuDepot)
-    });
 
+    const modification = annonceEnModification !== null;
 
+    const reponse = await fetch(
+        modification ? `/annonces/${annonceEnModification}` : "/annonces",
+        {
+            method: modification ? "PUT" : "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            },
+            body: JSON.stringify(nouveuDepot)
+        }
+    );
+
+    if (!reponse.ok) {
+        alert("Une erreur est survenue lors de l'enregistrement.");
+        return;
+    }
+
+    annonceEnModification = null;
     document.getElementById("form-depot").reset();
-    chargerDepots();
-    chargerCatalogue();
+    document.getElementById("depot-prix").disabled = false;
 
+    await chargerDepots();
+    await chargerCatalogue();
+
+    alert(modification ? "Annonce modifiée !" : "Annonce déposée !");
+});
+
+const natureAnnonce = document.getElementById("depot-nature")
+const champPrix = document.getElementById("depot-prix")
+
+natureAnnonce.addEventListener("change", function () {
+    console.log("Nature choisie : ", natureAnnonce.value);
+    if (natureAnnonce.value === "DON") {
+        champPrix.value = 0;
+        champPrix.disabled = true;
+    } else {
+        champPrix.value = "";
+        champPrix.disabled = false;
+    }
+    console.log("Prix désactivé :", champPrix.disabled)
 });
 
 async function supprimerDepots(id) {
@@ -128,8 +191,8 @@ document.getElementById("form-profil").addEventListener("submit", async function
         email: document.getElementById("profil-email").value,
         mot_de_passe: document.getElementById("profil-mdp").value,
     };
-    const token = localStorage.getItem("token");
-    await fetch("/profil", {
+        const token = localStorage.getItem("token");
+    const reponse = await fetch("/profil", {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -138,8 +201,13 @@ document.getElementById("form-profil").addEventListener("submit", async function
         body: JSON.stringify(nouveauProfil)
     });
 
-
-    document.getElementById("form-profil").reset();
+    if (reponse.ok) {
+        alert("Profil mis à jour");
+        chargerProfil();
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
 });
 
 async function chargerCatalogue() {
@@ -225,26 +293,48 @@ async function chargerScore() {
 chargerScore();
 
 const etapesTuto = [
-    { titre: "Bienvenue ! ", texte: "Découvrez UpcycleConnect." },
-    { titre: "Vos dépôts ! ", texte: " Déposez vos objets dans l'onglet dépôt." },
-    { titre: "Vos dépôts ! ", texte: " Déposez vos objets dans l'onglet dépôt." },
+    {
+        titre: "Bienvenue sur UpcycleConnect !",
+        texte: "Depuis votre espace personnel, vous pouvez gérer vos dépôts, découvrir des objets et participer à des événements.",
+        section: "accueil"
+    },
+    {
+        titre: "Vos dépôts",
+        texte: "Dans cette rubrique, vous pouvez consulter vos dépôts et déposer de nouveaux objets.",
+        section: "depot"
+    },
+    {
+        titre: "Le catalogue",
+        texte: "Découvrez les objets disponibles et recherchez ceux qui vous intéressent.",
+        section: "catalogue"
+    },
+    {
+        titre: "Les événements",
+        texte: "Consultez les événements proposés et inscrivez-vous aux activités.",
+        section: "evenements"
+    }
 ];
 let etapeActuelle = 0;
 
 function afficherEtape() {
     const tuto = etapesTuto[etapeActuelle];
+
     document.getElementById("tuto-titre").textContent = tuto.titre;
     document.getElementById("tuto-texte").textContent = tuto.texte;
 
+    afficherSection(tuto.section);
 }
 
 document.getElementById("tuto-suivant").addEventListener("click", async function (e) {
     e.preventDefault();
     etapeActuelle++;
     if (etapeActuelle >= etapesTuto.length) {
-        document.getElementById("tuto-overlay").classList.add("d-none")
+        document.getElementById("tuto-overlay").classList.add("d-none");
+        localStorage.setItem("tutoVu", "oui");
+        etapeActuelle = 0;
         return;
     }
+
     afficherEtape();
 });
 
@@ -252,10 +342,18 @@ function functionPremierLogin() {
     if (localStorage.getItem("tutoVu") == null) {
         document.getElementById("tuto-overlay").classList.remove("d-none");
         afficherEtape();
-        localStorage.setItem("tutoVu", "oui")
     }
 }
+
+document.getElementById("btn-revoir-tuto").addEventListener("click", () => {
+    etapeActuelle = 0;
+    document.getElementById("tuto-overlay").classList.remove("d-none");
+    afficherEtape();
+});
+
 functionPremierLogin();
+console.log("Tutoriel :", localStorage.getItem("tutoVu"));
+console.log("Overlay :", document.getElementById("tuto-overlay"));
 
 async function chargerApercuDepots() {
     const reponse = await fetch("/mesannonces", {
@@ -309,22 +407,22 @@ async function chargerEvenementsDispo() {
         return;
     }
     for (const e of events) {
-    const dejaInscrit = idsInscrits.includes(e.ID);
+        const dejaInscrit = idsInscrits.includes(e.ID);
 
-    // on demande combien de personnes sont inscrites à cet événement
-    const repPlaces = await fetch(`/evenements/${e.ID}/places`);
-    const dataPlaces = await repPlaces.json();
-    const placesRestantes = e.capacite_max - dataPlaces.inscrits;  // une simple soustraction
+        // on demande combien de personnes sont inscrites à cet événement
+        const repPlaces = await fetch(`/evenements/${e.ID}/places`);
+        const dataPlaces = await repPlaces.json();
+        const placesRestantes = e.capacite_max - dataPlaces.inscrits;  // une simple soustraction
 
-    const bouton = dejaInscrit
-        ? `<button class="btn btn-secondary btn-sm" disabled>Déjà inscrit ✓</button>`
-        : `<button onclick="sInscrireEvenement(${e.ID})" class="btn btn-primary btn-sm">S'inscrire</button>`;
+        const bouton = dejaInscrit
+            ? `<button class="btn btn-secondary btn-sm" disabled>Déjà inscrit ✓</button>`
+            : `<button onclick="sInscrireEvenement(${e.ID})" class="btn btn-primary btn-sm">S'inscrire</button>`;
 
-    const date = new Date(e.date_heure_debut).toLocaleString("fr-FR", {
-        dateStyle: "long", timeStyle: "short"
-    });
+        const date = new Date(e.date_heure_debut).toLocaleString("fr-FR", {
+            dateStyle: "long", timeStyle: "short"
+        });
 
-    const bloc = `
+        const bloc = `
     <div class="card mb-3">
         <div class="card-body">
             <h5 class="card-title">${e.titre}</h5>
@@ -336,8 +434,8 @@ async function chargerEvenementsDispo() {
         </div>
     </div>
     `;
-    div.innerHTML += bloc;
-}
+        div.innerHTML += bloc;
+    }
 }
 chargerEvenementsDispo();
 
@@ -351,14 +449,14 @@ async function sInscrireEvenement(id) {
         },
         body: JSON.stringify({ evenement_id: id })
     });
-    if(reponse.ok){
+    if (reponse.ok) {
         alert("Inscription réussie");
-    }else{
+    } else {
         const data = await reponse.json();
         alert(data.erreur);
     }
-     chargerMonPlanning();
-     chargerEvenementsDispo();
+    chargerMonPlanning();
+    chargerEvenementsDispo();
 }
 
 async function chargerMonPlanning() {
@@ -394,26 +492,29 @@ chargerMonPlanning();
 
 
 async function chargerConteneur() {
-    //envoi uen requete GET a l'API grâce a "fetch"
     const reponse = await fetch("/depotmesconteneurs", {
-        headers: {"Authorization" : "Bearer " + localStorage.getItem("token")}
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     });
-    //transforme la reponse en objet js
     const conteneur = await reponse.json()
     const div = document.getElementById("liste-conteneur");
+    div.innerHTML = "";
     if (conteneur.length === 0) {
-        div.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Aucun depot de conteneur pour l'instant</td></tr>`;
+        div.innerHTML = `<p class="text-muted">Aucun depot de conteneur pour l'instant</p>`;
         return
-    } 
+    }
     conteneur.forEach(c => {
-        // les codes + le bouton PDF n'apparaissent QUE si le dépôt est validé
         let codes = "";
         if (c.statut === "VALIDE") {
             codes = `
-                <p class="card-text">Code d'ouverture : ${c.code_ouverture}</p>
-                <p class="card-text">Code-barres : ${c.code_barres}</p>
-                <button onclick="telechargerPDF(${c.ID})" class="btn btn-primary btn-sm">Télécharger le justificatif</button>
-            `;
+        <p class="card-text">Code d'ouverture : ${c.code_ouverture}</p>
+        <p class="card-text">Code-barres : ${c.code_barres}</p>
+        <img id="codebarres-${c.ID}" class="d-block mb-2">
+        <button onclick="telechargerPDF(${c.ID})" class="btn btn-primary btn-sm">Télécharger le justificatif</button>
+    `;
+        } else if (c.statut === "REFUSE") {
+            codes = `<p class="text-danger">Votre demande a été refusée.</p>`;
+        } else {
+            codes = `<p class="text-muted">Votre demande est en cours de traitement.</p>`;
         }
 
         const bloc = `
@@ -429,9 +530,25 @@ async function chargerConteneur() {
         `;
         div.innerHTML += bloc;
     });
-    
+
+    conteneur.forEach(c => {
+        if (c.statut === "VALIDE") {
+            chargerImageCodeBarres(c.ID);
+        }
+    });
 }
+
 chargerConteneur();
+
+async function chargerImageCodeBarres(id) {
+    const reponse = await fetch(`/conteneur/${id}/codebarres`, {
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
+    });
+    const blob = await reponse.blob();
+    const url = URL.createObjectURL(blob);
+    document.getElementById("codebarres-" + id).src = url;
+}
+
 
 document.getElementById("form-conteneur").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -483,7 +600,7 @@ async function chargerAnnoncesPourSelect() {
         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
     });
     const annonces = await reponse.json();
-    const annoncesValidees = annonces.filter( a => a.statut === "VALIDE")
+    const annoncesValidees = annonces.filter(a => a.statut === "VALIDE")
     const select = document.getElementById("conteneur-annonce");
     select.innerHTML = "";
 
@@ -494,14 +611,14 @@ async function chargerAnnoncesPourSelect() {
 }
 chargerAnnoncesPourSelect();
 
-async function traduire (langue){
+async function traduire(langue) {
     const reponse = await fetch(`/static/${langue}.json`);
     const textes = await reponse.json();
 
-    document.querySelectorAll("[data-i18n]").forEach(element =>{
+    document.querySelectorAll("[data-i18n]").forEach(element => {
         const cle = element.getAttribute("data-i18n");
 
-        element.textContent = textes [cle];
+        element.textContent = textes[cle];
     });
     document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
         const cle = element.getAttribute("data-i18n-placeholder");
@@ -509,3 +626,42 @@ async function traduire (langue){
     })
 }
 
+
+
+let toutesLesPrestations = [];
+
+async function chargerPrestations() {
+    const reponse = await fetch("/prestations");
+    toutesLesPrestations = await reponse.json();
+    afficherPrestations(toutesLesPrestations);
+}
+chargerPrestations();
+
+function afficherPrestations(liste) {
+    const div = document.getElementById("liste-prestations");
+    div.innerHTML = "";
+    if (liste.length === 0) {
+        div.innerHTML = `<p class="text-muted">Aucune prestation disponible pour le moment.</p>`;
+        return;
+    }
+    liste.forEach(p => {
+        div.innerHTML += `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">${p.nom}</h5>
+                <p class="card-text">${p.description}</p>
+                <p class="card-text">Type : ${p.type_offre}</p>
+                <p class="card-text">Tarif : ${p.tarif} €</p>
+                <p class="card-text">Capacité maximale : ${p.capacite_max} personnes</p>
+            </div>
+        </div>`;
+    });
+}
+
+document.getElementById("filtre-prestations").addEventListener("change", function () {
+    if (this.value === "") {
+        afficherPrestations(toutesLesPrestations);
+    } else {
+        afficherPrestations(toutesLesPrestations.filter(p => p.type_offre === "Formation"));
+    }
+});

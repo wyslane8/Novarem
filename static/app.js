@@ -387,6 +387,7 @@ async function chargerDemandesDepot() {
     }
 
     const depots = await reponse.json();
+    console.log(depots)
     const tbody = document.getElementById("tableau-depot");
 
     tbody.innerHTML = "";
@@ -400,7 +401,10 @@ async function chargerDemandesDepot() {
                 <td>${d.statut}</td>
                 <td>
                     ${d.statut === "EN_ATTENTE"
-                ? `<button onclick="validerDepot(${d.ID})" class="btn btn-success btn-sm">Valider</button>`
+                ? `
+        <button onclick="validerDepot(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+        <button onclick="refuserDepot(${d.ID})" class="btn btn-danger btn-sm">Refuser</button>
+      `
                 : "Déjà traité"}
                 </td>
             </tr>
@@ -410,22 +414,52 @@ async function chargerDemandesDepot() {
     });
 }
 
+
 async function validerDepot(id) {
     const token = localStorage.getItem("token");
 
     const reponse = await fetch(`/depotconteneurs/${id}`, {
         method: "PUT",
         headers: {
+            "Content-Type": "application/json",
             "Authorization": "Bearer " + token
-        }
+        },
+        body: JSON.stringify({ statut: "VALIDE" })
     });
 
     if (reponse.ok) {
         await chargerDemandesDepot();
     } else {
-        alert("Erreur lors de la validation du dépôt.");
+        const data = await reponse.json();
+        alert(data.erreur || "Erreur lors de la validation.");
     }
 }
+
+async function refuserDepot(id) {
+    const token = localStorage.getItem("token");
+
+    const confirmation = confirm("Voulez-vous vraiment refuser cette demande ?");
+    if (!confirmation) {
+        return;
+    }
+
+    const reponse = await fetch(`/depotconteneurs/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ statut: "REFUSE" })
+    });
+
+    if (reponse.ok) {
+        await chargerDemandesDepot();
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur || "Erreur lors du refus.");
+    }
+}
+
 
 
 // GESTION DES ANNONCES
@@ -443,18 +477,25 @@ async function chargerDepots() {
     tbody.innerHTML = "";
 
     depots.forEach(d => {
+        let boutons = "";
+        if(d.statut === "EN_ATTENTE"){
+             boutons = `
+            <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
+            <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
+        `;
+        }
         const ligne = `
             <tr>
                 <td>${d.ID}</td>
                 <td>${d.titre}</td>
                 <td>${d.description}</td>
                 <td>${d.type_annonce}</td>
+                <td>${d.nature_annonce}</td>
                 <td>${d.prix_vente}</td>
                 <td>${d.statut}</td>
                 <td>${d.utilisateur_id}</td>
+
                 <td>
-                    <button onclick="validerAnnonce(${d.ID})" class="btn btn-success btn-sm">Valider</button>
-                    <button onclick="refuserAnnonce(${d.ID})" class="btn btn-warning btn-sm">Refuser</button>
                     <button onclick="supprimerDepots(${d.ID})" class="btn btn-danger btn-sm">Supprimer</button>
                 </td>
             </tr>
@@ -467,7 +508,7 @@ async function chargerDepots() {
 async function validerAnnonce(id) {
     const token = localStorage.getItem("token");
 
-    await fetch(`/annonces/${id}`, {
+    await fetch(`/annonces/${id}/statut`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -482,7 +523,7 @@ async function validerAnnonce(id) {
 async function refuserAnnonce(id) {
     const token = localStorage.getItem("token");
 
-    await fetch(`/annonces/${id}`, {
+    await fetch(`/annonces/${id}/statut`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",

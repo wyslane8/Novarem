@@ -34,8 +34,11 @@ function afficherSection(nom) {
     if (nom === "catalogue") chargerCatalogue();
     if (nom === "annonces") chargerAnnonces();
     if (nom === "conteneurs") chargerConteneurs();
+    if (nom === "recuperation") chargerRecuperation();
+    if (nom === "profil") chargerProfil();
 }
 
+document.getElementById("actualiser-recuperation").addEventListener("click", chargerRecuperation)
 document.querySelectorAll("[data-section]").forEach(bouton => {
     bouton.addEventListener("click", () => afficherSection(bouton.dataset.section));
 });
@@ -163,6 +166,34 @@ async function chargerConteneurs() {
     }
 }
 
+async function chargerRecuperation() {
+    try {
+        const depots = await api("/professionnel/conteneurs");
+        const tableau = document.getElementById("tableau-recuperation");
+
+        tableau.innerHTML = "";
+
+        depots.forEach(d => {
+            tableau.innerHTML += `
+                <tr>
+                    <td>${d.titre}</td>
+                    <td>${d.description}</td>
+                    <td>${d.code_barres}</td>
+                    <td>
+                        <button onclick = "demanderRecuperation(${d.ID})" class ="btn btn-primary btn-sm">Demander </button>
+                    </td>
+                </tr>`;
+        });
+
+        if (!depots.length) {
+            tableau.innerHTML = "<tr><td colspan='4'>Aucun objet disponible.</td></tr>";
+        }
+
+    } catch (e) {
+        alert(e.message);
+    }
+}
+
 document.getElementById("form-conteneur").addEventListener("submit", async e => {
     e.preventDefault();
 
@@ -185,4 +216,62 @@ document.getElementById("form-conteneur").addEventListener("submit", async e => 
 
 document.getElementById("actualiser-catalogue").addEventListener("click", chargerCatalogue);
 document.getElementById("actualiser-conteneurs").addEventListener("click", chargerConteneurs);
- 
+
+async function demanderRecuperation(id) {
+    const reponse = await fetch("/professionnel/demandes-recuperation", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ conteneur_id: id })
+    })
+    if (reponse.ok) {
+        alert("succes");
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+    chargerRecuperation();
+}
+
+async function chargerProfil() {
+    const reponse = await fetch("/profil", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    const profil = await reponse.json();
+    document.getElementById("profil-affiche-nom").textContent = profil.nom;
+    document.getElementById("profil-affiche-email").textContent = profil.email;
+    document.getElementById("profil-nom").value = profil.nom;
+    document.getElementById("profil-email").value = profil.email;
+    document.getElementById("profil-mdp").value = "";
+
+    document.getElementById("profil-affiche-role").textContent = profil.role;
+    const date = new Date(profil.CreatedAt);
+    document.getElementById("profil-affiche-date").textContent = date.toLocaleDateString("fr-FR");
+
+}
+
+document.getElementById("form-profil").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const nouveauProfil = {
+        nom: document.getElementById("profil-nom").value,
+        email: document.getElementById("profil-email").value,
+        mot_de_passe: document.getElementById("profil-mdp").value
+    };
+    const reponse = await fetch("/profil", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(nouveauProfil)
+    });
+    if (reponse.ok) {
+        alert("Profil mis à jour");
+        chargerProfil();
+    } else {
+        const data = await reponse.json();
+        alert(data.erreur);
+    }
+});
