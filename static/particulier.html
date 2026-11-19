@@ -10,15 +10,12 @@
     <style>
         .tuto-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         .tuto-box {
@@ -28,11 +25,20 @@
             max-width: 400px;
             text-align: center;
         }
+
+        .navbar .nav-link.active {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .sujet-forum {
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-xl navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">UpcycleConnect | Particulier</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
@@ -40,50 +46,49 @@
             </button>
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="accueil" data-i18n="accueil">Accueil</button>
+                    <li class="nav-item"><button class="nav-link" data-section="accueil"
+                            data-i18n="accueil">Accueil</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="depot" data-i18n="depot">Mes
+                            annonces</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="catalogue"
+                            data-i18n="catalogue">Catalogue</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="conseil"
+                            data-i18n="conseils">Conseils</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="evenements"
+                            data-i18n="evenements">Évènements</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="prestations"
+                            data-i18n="prestations">Prestations et formations</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="projets"
+                            data-i18n="projets">Projets</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="conteneur" data-i18n="conteneur">Dépôt
+                            en conteneur</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="forum" data-i18n="forum">Forum</button>
                     </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="depot" data-i18n="depot">Mes annonces</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="catalogue" data-i18n="catalogue">Catalogue</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="conseil" data-i18n="conseils">Conseils</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="evenements" data-i18n="evenements">Évènements</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="profil" data-i18n="profil">Profil</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="conteneur" data-i18n="conteneur">Dépôt en
-                            conteneur</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="forum" data-i18n="forum">Forum</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="actualites" data-i18n="actualites">Actualités</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="prestations">Prestations et formations</button>
-                    </li>
+                    <li class="nav-item"><button class="nav-link" data-section="actualites"
+                            data-i18n="actualites">Actualités</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="abonnement"
+                            data-i18n="abonnement">Abonnement</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="factures"
+                            data-i18n="factures">Factures</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="profil"
+                            data-i18n="profil">Profil</button></li>
                 </ul>
-                <button class="btn btn-sm btn-outline-dark" onclick="traduire('fr')">FR</button>
-                <button class="btn btn-sm btn-outline-dark" onclick="traduire('en')">EN</button>
-                <button class="btn btn-sm btn-outline-dark" onclick="traduire('es')">ES</button>
-                <button class="btn btn-outline-secondary ms-auto" id="btn-logout">Déconnexion</button>
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-outline-dark" onclick="traduire('fr')">FR</button>
+                    <button class="btn btn-sm btn-outline-dark" onclick="traduire('en')">EN</button>
+                    <button class="btn btn-sm btn-outline-dark" onclick="traduire('es')">ES</button>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" id="btn-logout"
+                        data-i18n="deconnexion">Déconnexion</button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="container mt-4">
+    <main class="container mt-4 mb-5">
 
+        <!-- accuiel -->
         <section id="section-accueil">
-            <h1>Bonjour <span id="accueil-nom"></span></h1>
+            <h1><span data-i18n="bonjour">Bonjour</span> <span id="accueil-nom"></span></h1>
             <div class="card mt-3" style="max-width:300px">
                 <div class="card-body text-center">
                     <h5 class="card-title" data-i18n="monScore">Mon Score</h5>
@@ -98,161 +103,252 @@
             <div id="accueil-depots"></div>
             <h2 class="mt-4" data-i18n="monPlanning">Mon planning</h2>
             <div id="accueil-planning"></div>
-            <h2 class="mt-4">Mes réservations</h2>
+            <h2 class="mt-4" data-i18n="mesReservations">Mes réservations</h2>
             <div id="accueil-reservations"></div>
         </section>
-        <section id="section-forum" class="d-none">
-            <h1>Forum de la communauté</h1>
 
-            <div id="forum-liste">
-                <h2 class="mt-3">Nouveau sujet</h2>
-                <form id="form-sujet" class="mb-4">
-                    <input id="sujet-titre" class="form-control mb-2" placeholder="Titre du sujet" required>
-                    <textarea id="sujet-contenu" class="form-control mb-2" placeholder="Votre message"
-                        required></textarea>
-                    <button class="btn btn-primary" type="submit">Publier</button>
-                </form>
-                <h2>Sujets</h2>
-                <div id="liste-sujets"></div>
-            </div>
-
-            <div id="forum-sujet" class="d-none">
-                <button id="btn-retour-forum" class="btn btn-outline-secondary mb-3">← Retour aux sujets</button>
-                <h2 id="sujet-affiche-titre"></h2>
-                <div id="liste-messages"></div>
-                <form id="form-message">
-                    <textarea id="message-contenu" class="form-control mb-2" placeholder="Répondre..."
-                        required></textarea>
-                    <button class="btn btn-primary" type="submit">Répondre</button>
-                </form>
-            </div>
-        </section>
-
-        <section id="section-actualites" class="d-none">
-            <h1>Actualités</h1>
-            <div id="liste-actualites"></div>
-        </section>
-        <section id="section-conteneur" class="d-none">
-            <h1 data-i18n="conteneurTitre">Dépôt en conteneur</h1>
-            <div id="liste-conteneur"></div>
-
-            <h2 class="mt-4">Demandes de récupération</h2>
-            <div id="liste-demandes"></div>
-
-            <h2 class="mt-4" data-i18n="demanderDepot">Demander un dépôt en conteneur</h2>
-            <form id="form-conteneur">
-                <div class="mb-2">
-                    <select id="conteneur-annonce" class="form-control" required>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" data-i18n="envoyerDemande">Envoyer la demande</button>
-            </form>
-        </section>
-
+        <!-- annonces -->
         <section id="section-depot" class="d-none">
             <h1 data-i18n="mesDepotsTitre">Mes annonces</h1>
-
-            <table class="table table-striped mt-3">
-                <thead>
-                    <tr>
-                        <th data-i18n="colTitre">Titre</th>
-                        <th data-i18n="colDescription">Description</th>
-                        <th data-i18n="colType">Type</th>
-                        <th data-i18n="colPrix">Prix</th>
-                        <th data-i18n="colStatut">Statut</th>
-                        <th data-i18n="colActions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableau-depots"></tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th data-i18n="colTitre">Titre</th>
+                            <th data-i18n="colDescription">Description</th>
+                            <th data-i18n="colType">Type</th>
+                            <th data-i18n="colPrix">Prix</th>
+                            <th data-i18n="colStatut">Statut</th>
+                            <th data-i18n="colActions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-depots"></tbody>
+                </table>
+            </div>
 
             <h2 class="mt-4" data-i18n="deposerObjet">Créer une annonce</h2>
-            <form id="form-depot">
+            <form id="form-depot" style="max-width:500px">
                 <div class="mb-2">
-                    <input type="text" id="depot-titre" data-i18n-placeholder="phTitre" class="form-control" required>
+                    <input type="text" id="depot-titre" data-i18n-placeholder="phTitre" placeholder="Titre"
+                        class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="text" id="depot-description" data-i18n-placeholder="phDescription" class="form-control"
-                        required>
+                    <input type="text" id="depot-description" data-i18n-placeholder="phDescription"
+                        placeholder="Description" class="form-control" required>
                 </div>
                 <div class="mb-2">
+                    <label for="depot-type" data-i18n="categorie">Catégorie</label>
                     <select id="depot-type" class="form-control">
-                        <option value="Mobilier">Mobilier</option>
-                        <option value="Vêtements">Vêtements</option>
-                        <option value="Électronique">Électronique</option>
-                        <option value="Décoration">Décoration</option>
+                        <option value="Mobilier" data-i18n="catMobilier">Mobilier</option>
+                        <option value="Vêtements" data-i18n="catVetements">Vêtements</option>
+                        <option value="Électronique" data-i18n="catElectronique">Électronique</option>
+                        <option value="Décoration" data-i18n="catDecoration">Décoration</option>
                     </select>
                 </div>
                 <div class="mb-2">
-                    <label for="depot-nature">Type d'annonce</label>
+                    <label for="depot-nature" data-i18n="typeAnnonce">Type d'annonce</label>
                     <select id="depot-nature" class="form-control" required>
-                        <option value="VENTE">Vente</option>
-                        <option value="DON">Don</option>
+                        <option value="VENTE" data-i18n="vente">Vente</option>
+                        <option value="DON" data-i18n="don">Don</option>
                     </select>
                 </div>
                 <div class="mb-2">
-                    <input type="number" id="depot-prix" data-i18n-placeholder="phPrix" class="form-control" step="0.01"
-                        min="0" required>
+                    <input type="number" id="depot-prix" data-i18n-placeholder="phPrix" placeholder="Prix (€)"
+                        class="form-control" step="0.01" min="0" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Publier l'annonce</button>
+                <button type="submit" class="btn btn-primary" data-i18n="publierAnnonce">Publier l'annonce</button>
             </form>
         </section>
 
-
+        <!-- catalogue -->
         <section id="section-catalogue" class="d-none">
             <h1 data-i18n="catalogueTitre">Catalogue</h1>
-            <input type="text" id="recherche-catalogue" data-i18n-placeholder="phRecherche" placeholder="Rechercher...">
-            <select id="filtre-categorie">
-                <option value="" data-i18n="toutesCategories">Toutes les catégories</option>
-                <option value="Mobilier" data-i18n="catMobilier">Mobilier</option>
-                <option value="Vêtements" data-i18n="catVetements">Vêtements</option>
-                <option value="Électronique" data-i18n="catElectronique">Électronique</option>
-                <option value="Décoration" data-i18n="catDecoration">Décoration</option>
-            </select>
-            <table class="table table-striped mt-3">
-                <thead>
-                    <tr>
-                        <th data-i18n="colTitre">Titre</th>
-                        <th data-i18n="colDescription">Description</th>
-                        <th data-i18n="colType">Type</th>
-                        <th data-i18n="colPrix">Prix</th>
-                    </tr>
-                </thead>
-                <tbody id="tableau-catalogue"></tbody>
-            </table>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <input type="text" id="recherche-catalogue" class="form-control" style="max-width:300px"
+                    data-i18n-placeholder="phRecherche" placeholder="Rechercher...">
+                <select id="filtre-categorie" class="form-control" style="max-width:250px">
+                    <option value="" data-i18n="toutesCategories">Toutes les catégories</option>
+                    <option value="Mobilier" data-i18n="catMobilier">Mobilier</option>
+                    <option value="Vêtements" data-i18n="catVetements">Vêtements</option>
+                    <option value="Électronique" data-i18n="catElectronique">Électronique</option>
+                    <option value="Décoration" data-i18n="catDecoration">Décoration</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th data-i18n="colTitre">Titre</th>
+                            <th data-i18n="colDescription">Description</th>
+                            <th data-i18n="colType">Type</th>
+                            <th data-i18n="colPrix">Prix</th>
+                            <th data-i18n="colAction">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-catalogue"></tbody>
+                </table>
+            </div>
         </section>
 
-        <section id="section-prestations" class="d-none">
-            <h1>Prestations et formations</h1>
-            <select id="filtre-prestations" class="form-control mb-3" style="max-width: 300px;">
-                <option value="">Toutes les offres</option>
-                <option value="Formation">Formations</option>
-            </select>
-            <div id="liste-prestations"></div>
-        </section>
-
-
+        <!-- conseils -->
         <section id="section-conseil" class="d-none">
             <h1 data-i18n="conseilsTitre">Conseils</h1>
             <div id="liste-conseils"></div>
         </section>
 
+        <!-- events -->
         <section id="section-evenements" class="d-none">
-            <h1 data-i18n="evenementsTitre">Événements</h1>
+            <h1 data-i18n="evenementsTitre">Évènements</h1>
             <div id="liste-evenements-dispo"></div>
         </section>
 
+        <!-- presta -->
+        <section id="section-prestations" class="d-none">
+            <h1 data-i18n="prestations">Prestations et formations</h1>
+            <select id="filtre-prestations" class="form-control mb-3" style="max-width: 300px;">
+                <option value="" data-i18n="toutesOffres">Toutes les offres</option>
+            </select>
+            <div id="liste-prestations"></div>
+        </section>
+
+        <!-- projets -->
+        <section id="section-projets" class="d-none">
+            <h1 data-i18n="projetsTitre">Mes projets d'upcycling</h1>
+            <form id="form-projet" class="mb-4" style="max-width:500px">
+                <input id="projet-titre" class="form-control mb-2" data-i18n-placeholder="phTitreProjet"
+                    placeholder="Titre du projet" required>
+                <textarea id="projet-description" class="form-control mb-2" data-i18n-placeholder="phDescription"
+                    placeholder="Description" required></textarea>
+                <label for="projet-avancement" data-i18n="avancement">Avancement (%)</label>
+                <input id="projet-avancement" type="number" min="0" max="100" class="form-control mb-2" value="0"
+                    required>
+                <div class="form-check mb-2">
+                    <input id="projet-avant" type="checkbox" class="form-check-input">
+                    <label for="projet-avant" class="form-check-label" data-i18n="mettreEnAvant">Mettre en avant</label>
+                </div>
+                <button id="btn-projet" class="btn btn-primary" type="submit">Créer</button>
+                <button id="btn-annuler-projet" class="btn btn-outline-secondary d-none" type="button"
+                    data-i18n="annuler">Annuler</button>
+            </form>
+            <div id="liste-projets"></div>
+        </section>
+
+        <!-- conteneur -->
+        <section id="section-conteneur" class="d-none">
+            <h1 data-i18n="conteneurTitre">Dépôt en conteneur</h1>
+            <div id="liste-conteneur"></div>
+
+            <h2 class="mt-4" data-i18n="demandesRecup">Demandes de récupération</h2>
+            <div id="liste-demandes"></div>
+
+            <h2 class="mt-4" data-i18n="demanderDepot">Demander un dépôt en conteneur</h2>
+            <form id="form-conteneur" style="max-width:500px">
+                <div class="mb-2">
+                    <select id="conteneur-annonce" class="form-control" required></select>
+                </div>
+                <button type="submit" class="btn btn-primary" data-i18n="envoyerDemande">Envoyer la demande</button>
+            </form>
+        </section>
+
+        <!-- forum -->
+        <section id="section-forum" class="d-none">
+            <h1 data-i18n="forumTitre">Forum de la communauté</h1>
+
+            <div id="forum-liste">
+                <h2 class="mt-3" data-i18n="nouveauSujet">Nouveau sujet</h2>
+                <form id="form-sujet" class="mb-4" style="max-width:600px">
+                    <input id="sujet-titre" class="form-control mb-2" data-i18n-placeholder="phTitreSujet"
+                        placeholder="Titre du sujet" required>
+                    <textarea id="sujet-contenu" class="form-control mb-2" data-i18n-placeholder="phMessage"
+                        placeholder="Votre message" required></textarea>
+                    <button class="btn btn-primary" type="submit" data-i18n="publier">Publier</button>
+                </form>
+                <h2 data-i18n="sujets">Sujets</h2>
+                <div id="liste-sujets"></div>
+            </div>
+
+            <div id="forum-sujet" class="d-none">
+                <button id="btn-retour-forum" class="btn btn-outline-secondary mb-3" data-i18n="retourSujets">← Retour
+                    aux sujets</button>
+                <h2 id="sujet-affiche-titre"></h2>
+                <div id="liste-messages"></div>
+                <form id="form-message" style="max-width:600px">
+                    <textarea id="message-contenu" class="form-control mb-2" data-i18n-placeholder="phRepondre"
+                        placeholder="Répondre..." required></textarea>
+                    <button class="btn btn-primary" type="submit" data-i18n="repondre">Répondre</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- actu -->
+        <section id="section-actualites" class="d-none">
+            <h1 data-i18n="actualitesTitre">Actualités</h1>
+            <div id="liste-actualites"></div>
+        </section>
+
+        <!-- abonnement -->
+        <section id="section-abonnement" class="d-none">
+            <h1 data-i18n="monAbonnement">Mon abonnement</h1>
+            <div id="mon-abonnement" class="mb-4"></div>
+
+            <h2 data-i18n="formules">Les formules</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4 data-i18n="gratuit">Gratuit</h4>
+                        <p class="display-6">0 €</p>
+                        <p data-i18n="descGratuit">Consultation du catalogue et dépôt d'annonces.</p>
+                        <button onclick="choisirFormule('GRATUIT')" class="btn btn-outline-primary mt-auto"
+                            data-i18n="choisir">Choisir</button>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4>Pro</h4>
+                        <p class="display-6">15 € <span data-i18n="parMois">/ mois</span></p>
+                        <p data-i18n="descPro">Récupération en conteneur et projets d'upcycling.</p>
+                        <button onclick="choisirFormule('PRO')" class="btn btn-primary mt-auto"
+                            data-i18n="choisir">Choisir</button>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4>Premium</h4>
+                        <p class="display-6">30 € <span data-i18n="parMois">/ mois</span></p>
+                        <p data-i18n="descPremium">Tout Pro + mise en avant des projets et alertes prioritaires.</p>
+                        <button onclick="choisirFormule('PREMIUM')" class="btn btn-success mt-auto"
+                            data-i18n="choisir">Choisir</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- factures -->
+        <section id="section-factures" class="d-none">
+            <h1 data-i18n="facturesTitre">Mes factures</h1>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th data-i18n="colNumero">N°</th>
+                            <th data-i18n="colDate">Date</th>
+                            <th data-i18n="colDescription">Description</th>
+                            <th data-i18n="colMontant">Montant</th>
+                            <th>PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-factures"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- profil -->
         <section id="section-profil" class="d-none">
             <h1 data-i18n="monProfil">Mon profil</h1>
-
             <div class="card mb-4" style="max-width:500px">
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="ms-3">
-                            <h4 class="mb-0" id="profil-affiche-nom"></h4>
-                            <span class="badge bg-success" id="profil-affiche-role"></span>
-                        </div>
-                    </div>
+                    <h4 class="mb-0" id="profil-affiche-nom"></h4>
+                    <span class="badge bg-success" id="profil-affiche-role"></span>
                     <hr>
                     <p class="mb-1"><strong data-i18n="labelEmail">Email :</strong> <span
                             id="profil-affiche-email"></span></p>
@@ -262,30 +358,33 @@
             </div>
 
             <h2 data-i18n="modifierInfos">Modifier mes informations</h2>
-
-            <form id="form-profil">
-                <!--margin bottom -->
+            <form id="form-profil" style="max-width:500px">
                 <div class="mb-2">
-                    <!-- placeholder texte gris qui s'affcihe dans le champs vide != de label-->
-                    <input type="text" id="profil-nom" data-i18n-placeholder="phNom" class="form-control" required>
+                    <input type="text" id="profil-nom" data-i18n-placeholder="phNom" placeholder="Nom"
+                        class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="email" id="profil-email" data-i18n-placeholder="phEmail" class="form-control" required>
+                    <input type="email" id="profil-email" data-i18n-placeholder="phEmail" placeholder="Email"
+                        class="form-control" required>
                 </div>
                 <div class="mb-2">
-                    <input type="password" id="profil-mdp" data-i18n-placeholder="phNouveauMdp" class="form-control">
+                    <input type="password" id="profil-mdp" data-i18n-placeholder="phNouveauMdp"
+                        placeholder="Nouveau mot de passe (facultatif)" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary" data-i18n="enregistrer">Enregistrer</button>
             </form>
-            <button type="button" class="btn btn-outline-primary mt-3" id="btn-revoir-tuto">Revoir le tutoriel</button>
+            <button type="button" class="btn btn-outline-primary mt-3" id="btn-revoir-tuto"
+                data-i18n="revoirTuto">Revoir le tutoriel</button>
         </section>
 
     </main>
 
+    <!-- tuto -->
     <div id="tuto-overlay" class="tuto-overlay d-none">
         <div class="tuto-box">
-            <h3 id="tuto-titre">Titre</h3>
-            <p id="tuto-texte">Texte</p>
+            <h3 id="tuto-titre"></h3>
+            <p id="tuto-texte"></p>
+            <button class="btn btn-outline-secondary" id="tuto-passer">Passer</button>
             <button class="btn btn-primary" id="tuto-suivant">Suivant</button>
         </div>
     </div>

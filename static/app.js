@@ -18,7 +18,7 @@ async function afficherResultat(reponse) {
 
 
 
-// GESTION DES UTILISATEURS
+// users
 
 async function chargerUtilisateurs() {
     const reponse = await fetch("/utilisateurs", {
@@ -102,7 +102,7 @@ async function supprimerUtilisateur(id) {
 }
 
 
-// GESTION DES CATEGORIES
+// cat
 
 async function chargerCategories() {
     const reponse = await fetch("/categoriePresta");
@@ -179,7 +179,7 @@ document.getElementById("form-categorie").addEventListener("submit", async funct
 });
 
 
-// GESTION DES PRESTATIONS
+// presta
 
 async function chargerPrestation() {
     const reponse = await fetch("/prestations");
@@ -265,7 +265,7 @@ document.getElementById("form-prestation").addEventListener("submit", async func
 });
 
 
-// GESTION DES EVENEMENTS
+// events
 
 async function chargerEvenements() {
     const reponse = await fetch("/evenements");
@@ -299,7 +299,7 @@ function preparerModificationEvents(id, titre, description, date_heure_debut, du
     idEventsEnModification = id;
     document.getElementById("events_titre").value = titre;
     document.getElementById("events_description").value = description;
-    //le champ datetime-local veut le format AAAA-MM-JJTHH:MM
+
     document.getElementById("events_date").value = date_heure_debut.slice(0, 16);
     document.getElementById("events_duree").value = duree_minutes;
     document.getElementById("events_capacite_max").value = capacite_max;
@@ -352,7 +352,7 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
 });
 
 
-// GESTION DES DEMANDES DE DEPOT
+// depot request 
 
 async function chargerDemandesDepot() {
     const reponse = await fetch("/depotconteneurs", {
@@ -369,7 +369,7 @@ async function chargerDemandesDepot() {
     tbody.innerHTML = "";
 
     depots.forEach(d => {
-        //on peut valider ou refuser seulement si la demande est en attente
+        //si demande en attente = on valide ou refuse 
         let boutons = "Déjà traité";
         if (d.statut === "EN_ATTENTE") {
             boutons = `
@@ -431,7 +431,7 @@ async function refuserDepot(id) {
 }
 
 
-// GESTION DES DEMANDES DE RECUPERATION
+// demandes de recup
 
 async function chargerRecuperationsAdmin() {
     const reponse = await fetch("/demandes-recuperation", {
@@ -459,7 +459,7 @@ async function chargerRecuperationsAdmin() {
 }
 
 
-// GESTION DES ANNONCES
+// annonces
 
 async function chargerDepots() {
     const reponse = await fetch("/annonces", {
@@ -530,7 +530,7 @@ async function supprimerDepots(id) {
 }
 
 
-// GESTION DES CONSEILS
+// conseils
 
 let tousLesConseils = [];
 let idConseilEnModification = null;
@@ -556,7 +556,7 @@ async function chargerConseils() {
 }
 chargerConseils();
 
-//on retrouve le conseil dans la liste deja chargée, comme ça pas de souci avec les apostrophes
+//on retrouve le conseil dans la liste deja chargée
 function preparerModificationConseil(id) {
     const conseil = tousLesConseils.find(c => c.ID === id);
     idConseilEnModification = id;
@@ -608,7 +608,7 @@ async function supprimerConseil(id) {
 }
 
 
-// TRADUCTIONS
+// trad
 
 async function traduire(langue) {
     const reponse = await fetch(`/static/${langue}.json`);
@@ -625,7 +625,7 @@ async function traduire(langue) {
     });
 }
 
-// NAVIGATION ENTRE LES SECTIONS
+// nav btw sections 
 
 function afficherSection(nom) {
     document.querySelectorAll("section").forEach(s => s.style.display = "none");
@@ -641,11 +641,11 @@ document.querySelectorAll("[data-section]").forEach(bouton => {
     bouton.addEventListener("click", () => afficherSection(bouton.dataset.section));
 });
 
-//au chargement on affiche seulement les utilisateurs
+//au chargement on affiche que les utilisateurs
 afficherSection("utilisateurs");
 
 
-// DECONNEXION
+// deco
 
 document.getElementById("btn-logout").addEventListener("click", () => {
     localStorage.removeItem("token");

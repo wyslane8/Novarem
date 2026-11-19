@@ -4,84 +4,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Espace Professionnel - UpcycleConnect</title>
+    <title>UpcycleConnect | Professionnel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/particulier.css" rel="stylesheet">
 </head>
 
 <body>
-
-
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">UpcycleConnect | Professionnel</a>
-
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPro">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="menuPro">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="accueil">Accueil</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="catalogue">Catalogue</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="annonces">Mes annonces</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="conteneurs">Mes dépôts</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="recuperation">Récupération</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="mes-recuperations">Mes récupérations</button>
-                    </li>
-
-                    <li class="nav-item">
-                        <button class="nav-link" data-section="profil">Profil</button>
-                    </li>
+                    <li class="nav-item"><button class="nav-link" data-section="accueil">Accueil</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="catalogue">Catalogue</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="annonces">Mes annonces</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="conteneurs">Dépôt en conteneur</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="recuperation">Récupération</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="mes-recuperations">Mes récupérations</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="projets">Mes projets</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="abonnement">Abonnement</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="factures">Factures</button></li>
+                    <li class="nav-item"><button class="nav-link" data-section="profil">Profil</button></li>
                 </ul>
                 <button class="btn btn-outline-secondary ms-auto" id="btn-logout">Déconnexion</button>
             </div>
-
-            <button class="btn btn-outline-secondary" id="btn-logout">Déconnexion</button>
-        </div>
         </div>
     </nav>
 
     <main class="container mt-4">
+
         <section id="section-accueil">
             <h1>Espace professionnel</h1>
             <p>Bienvenue sur votre espace UpcycleConnect.</p>
             <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card p-3">
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
                         <h5>Catalogue</h5>
-                        <p>Consultez les annonces disponibles.</p>
+                        <p>Consultez et achetez les objets disponibles.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card p-3">
-                        <h5>Mes annonces</h5>
-                        <p>Gérez vos annonces publiées.</p>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h5>Récupération</h5>
+                        <p>Récupérez les objets déposés dans les conteneurs.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card p-3">
-                        <h5>Mes dépôts</h5>
-                        <p>Suivez vos demandes de dépôt.</p>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h5>Projets</h5>
+                        <p>Suivez et mettez en avant vos projets d'upcycling.</p>
                     </div>
                 </div>
             </div>
         </section>
-        <section id="section-mes-recuperations" class="d-none">
-            <h2>Mes récupérations</h2>
-            <div id="liste-mes-demandes"></div>
-        </section>
-
 
         <section id="section-catalogue" class="d-none">
             <h2>Catalogue des annonces validées</h2>
@@ -94,6 +72,7 @@
                             <th>Description</th>
                             <th>Type</th>
                             <th>Prix</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="tableau-catalogue"></tbody>
@@ -120,10 +99,9 @@
             </div>
 
             <h3 class="mt-4">Créer une annonce</h3>
-            <form id="form-annonce">
+            <form id="form-annonce" style="max-width:500px">
                 <input class="form-control mb-2" id="annonce-titre" placeholder="Titre" required>
-                <textarea class="form-control mb-2" id="annonce-description" placeholder="Description"
-                    required></textarea>
+                <textarea class="form-control mb-2" id="annonce-description" placeholder="Description" required></textarea>
                 <select class="form-control mb-2" id="annonce-type" required>
                     <option value="Mobilier">Mobilier</option>
                     <option value="Vêtements">Vêtements</option>
@@ -134,16 +112,13 @@
                     <option value="VENTE">Vente</option>
                     <option value="DON">Don</option>
                 </select>
-
-                <input class="form-control mb-2" type="number" min="0" step="0.01" id="annonce-prix"
-                    placeholder="Prix (€)" required>
-                <button class="btn btn-primary" type="submit">Publier mon annonce</button>
+                <input class="form-control mb-2" type="number" min="0" step="0.01" id="annonce-prix" placeholder="Prix (€)" required>
+                <button class="btn btn-primary" type="submit">Publier l'annonce</button>
             </form>
-            <p id="annonce-message" class="mt-2"></p>
         </section>
 
         <section id="section-conteneurs" class="d-none">
-            <h2>Suivi de mes dépôts</h2>
+            <h2>Dépôt en conteneur</h2>
             <button class="btn btn-secondary mb-3" id="actualiser-conteneurs">Actualiser</button>
             <div class="table-responsive">
                 <table class="table table-striped">
@@ -162,22 +137,18 @@
             </div>
 
             <h3 class="mt-4">Demander un dépôt</h3>
-            <form id="form-conteneur">
-                <select class="form-control mb-2" id="conteneur-annonce" required>
-                    <option value="">Choisir une annonce validée</option>
-                </select>
+            <form id="form-conteneur" style="max-width:500px">
+                <select class="form-control mb-2" id="conteneur-annonce" required></select>
                 <button class="btn btn-primary" type="submit">Envoyer la demande</button>
             </form>
-            <p id="conteneur-message" class="mt-2"></p>
         </section>
+
         <section id="section-recuperation" class="d-none">
             <h2>Récupération des objets</h2>
             <p>Consultez les objets dont le dépôt a été validé.</p>
-
-            <button class="btn btn-secondary mb-3" id="actualiser-recuperation">
-                Actualiser
-            </button>
-
+            <button class="btn btn-secondary mb-3" id="actualiser-recuperation">Actualiser</button>
+            <input type="text" id="recherche-code" class="form-control mb-3" style="max-width:300px"
+                placeholder="Scanner ou taper un code-barres">
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -192,9 +163,81 @@
                 </table>
             </div>
         </section>
+
+        <section id="section-mes-recuperations" class="d-none">
+            <h2>Mes récupérations</h2>
+            <div id="liste-mes-demandes"></div>
+        </section>
+
+        <section id="section-projets" class="d-none">
+            <h2>Mes projets d'upcycling</h2>
+            <form id="form-projet" class="mb-4" style="max-width:500px">
+                <input id="projet-titre" class="form-control mb-2" placeholder="Titre du projet" required>
+                <textarea id="projet-description" class="form-control mb-2" placeholder="Description" required></textarea>
+                <label for="projet-avancement">Avancement (%)</label>
+                <input id="projet-avancement" type="number" min="0" max="100" class="form-control mb-2" value="0" required>
+                <div class="form-check mb-2">
+                    <input id="projet-avant" type="checkbox" class="form-check-input">
+                    <label for="projet-avant" class="form-check-label">Mettre en avant</label>
+                </div>
+                <button id="btn-projet" class="btn btn-primary" type="submit">Créer</button>
+            </form>
+            <div id="liste-projets"></div>
+        </section>
+
+        <section id="section-abonnement" class="d-none">
+            <h2>Mon abonnement</h2>
+            <div id="mon-abonnement" class="mb-4"></div>
+
+            <h3>Les formules</h3>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4>Gratuit</h4>
+                        <p class="display-6">0 €</p>
+                        <p>Consultation du catalogue et dépôt d'annonces.</p>
+                        <button onclick="choisirFormule('GRATUIT')" class="btn btn-outline-primary mt-auto">Choisir</button>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4>Pro</h4>
+                        <p class="display-6">15 € / mois</p>
+                        <p>Récupération en conteneur et projets d'upcycling.</p>
+                        <button onclick="choisirFormule('PRO')" class="btn btn-primary mt-auto">Choisir</button>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 h-100">
+                        <h4>Premium</h4>
+                        <p class="display-6">30 € / mois</p>
+                        <p>Tout Pro + mise en avant des projets et alertes prioritaires.</p>
+                        <button onclick="choisirFormule('PREMIUM')" class="btn btn-success mt-auto">Choisir</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-factures" class="d-none">
+            <h2>Mes factures</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Montant</th>
+                            <th>PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-factures"></tbody>
+                </table>
+            </div>
+        </section>
+
         <section id="section-profil" class="d-none">
             <h2>Mon profil</h2>
-
             <div class="card mb-4" style="max-width:500px">
                 <div class="card-body">
                     <h4 class="mb-0" id="profil-affiche-nom"></h4>
@@ -206,22 +249,13 @@
             </div>
 
             <h3>Modifier mes informations</h3>
-            <form id="form-profil">
-                <div class="mb-2">
-                    <input type="text" id="profil-nom" placeholder="Nom" class="form-control" required>
-                </div>
-                <div class="mb-2">
-                    <input type="email" id="profil-email" placeholder="Email" class="form-control" required>
-                </div>
-                <div class="mb-2">
-                    <input type="password" id="profil-mdp" placeholder="Nouveau mot de passe" class="form-control">
-                </div>
+            <form id="form-profil" style="max-width:500px">
+                <input type="text" id="profil-nom" placeholder="Nom" class="form-control mb-2" required>
+                <input type="email" id="profil-email" placeholder="Email" class="form-control mb-2" required>
+                <input type="password" id="profil-mdp" placeholder="Nouveau mot de passe" class="form-control mb-2">
                 <button type="submit" class="btn btn-primary">Enregistrer</button>
             </form>
         </section>
-
-
-
 
     </main>
 

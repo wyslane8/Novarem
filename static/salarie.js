@@ -105,7 +105,7 @@ document.getElementById("form-evenement").addEventListener("submit", async funct
 });
 
 
-// GESTION DES CONSEILS
+// conseils
 
 let tousLesConseils = [];
 let idConseilEnModification = null;
@@ -181,7 +181,7 @@ async function supprimerConseil(id) {
     chargerConseils();
 }
 
-// GESTION DES ACTUALITES
+// actu
 
 let toutesLesActualites = [];
 let idActuEnModification = null;
@@ -262,7 +262,7 @@ async function supprimerActu(id) {
 }
 
 
-// MODERATION DU FORUM
+// moderation forum
 
 let sujetsModeration = [];
 let sujetModere = null;
@@ -374,7 +374,7 @@ document.querySelectorAll("[data-section]").forEach(bouton => {
 afficherSection("evenements");
 
 
-// DECONNEXION
+// deco
 
 document.getElementById("btn-logout").addEventListener("click", () => {
     localStorage.removeItem("token");

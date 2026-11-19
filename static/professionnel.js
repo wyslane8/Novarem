@@ -177,7 +177,7 @@ async function chargerConteneurs() {
             </tr>`;
     });
 
-    //images  chargées apres la boucle, sinon innerHTML += les efface
+    //images sont chargées apres la boucle, sinon innerHTML += les efface
     depots.forEach(d => {
         if (d.statut === "VALIDE") {
             chargerImageCodeBarres(d.ID);
@@ -367,28 +367,3 @@ natureAnnoncePro.addEventListener("change", function () {
         champPrixPro.disabled = false;
     }
 });
-
-
-async function chargerImageCodeBarres(id) {
-    const reponse = await fetch(`/conteneur/${id}/codebarres`, {
-        headers: { "Authorization": "Bearer " + token }
-    });
-    if (!reponse.ok) {
-        return;
-    }
-    const blob = await reponse.blob();
-    const url = URL.createObjectURL(blob);
-    document.getElementById("codebarres-" + id).src = url;
-}
-
-async function telechargerPDF(id) {
-    const reponse = await fetch(`/conteneur/${id}/pdf`, {
-        headers: { "Authorization": "Bearer " + token }
-    });
-    const blob = await reponse.blob();
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement("a");
-    lien.href = url;
-    lien.download = "justificatif.pdf";
-    lien.click();
-}
